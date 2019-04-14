@@ -14,21 +14,6 @@ namespace Lib.DataFlow
             return t;
         }
 
-        public static IPubSubDispose PubSub()
-        {
-            var p = Pub(out var sub);
-            return new PubSubDisp() {Pub = p, Scope = sub};
-        }
-
-        class PubSubDisp : IPubSubDispose
-        {
-            public void Dispose() => Pub.Dispose();
-
-            public IDisposable Pub { get; set; }
-            public IScope Scope { get; set; }
-        }
-
-
         public static IDisposable Pub(out IScope onDispose)
         {
             var t = new OneTimeSubs();

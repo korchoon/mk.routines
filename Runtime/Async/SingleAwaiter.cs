@@ -68,17 +68,17 @@ namespace Lib.Async
         }
     }
 
-    public class SingleAwaiter<TReply> : ICriticalNotifyCompletion, IBreakableAwaiter
+    public class SingleAwaiter<T> : ICriticalNotifyCompletion, IBreakableAwaiter
     {
         bool _stopRequested;
-        Option<TReply> _result;
+        Option<T> _result;
         Action _continuation;
 
-        public SingleAwaiter(ISub<TReply> ex)
+        public SingleAwaiter(ISub<T> ex)
         {
             ex.OnNext(OneOff);
 
-            bool OneOff(TReply msg)
+            bool OneOff(T msg)
             {
                 _result = msg;
                 Dispose();
@@ -87,7 +87,7 @@ namespace Lib.Async
         }
 
         [UsedImplicitly]
-        public TReply GetResult()
+        public T GetResult()
         {
             if (_stopRequested) throw RoutineStoppedException.Empty;
 
