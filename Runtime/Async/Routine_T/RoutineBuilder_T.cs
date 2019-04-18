@@ -30,19 +30,18 @@ namespace Lib.Async
         public void SetException(Exception e)
         {
             Task.IsCompleted = true;
-
+            Task.PubErr.DisposeWith(e);
+            Task.MoveNext = Empty.Action();
+            Task.Dispose();
+            
             if (e is RoutineStoppedException)
             {
             }
             else
             {
-                SchPub.PubError.Next(e);
                 Dbg.LogException(e);
+                SchPub.PubError.Next(e);
             }
-
-            Task.PubErr.DisposeWith(e);
-            Task.MoveNext = Empty.Action();
-            Task.Dispose();
         }
 
 

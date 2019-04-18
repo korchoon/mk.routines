@@ -7,6 +7,25 @@ namespace Lib
 {
     public static class ReactExperimental
     {
+        public static void DelayedAction(this float sec, Action continuation, IScope scope)
+        {
+            sec.GetAwaiter().AwaitableTask.Scope(scope).OnDispose(continuation);
+        }
+
+        public static Func<ISub<T>> ToSub<T>(this Func<Routine<T>> callback, IScope scope)
+        {
+            return DynamicMethod;
+
+            ISub<T> DynamicMethod()
+            {
+                var (p, s) = React.Channel<T>(scope);
+                var routine = callback.Invoke();
+                var awaiter = routine.GetAwaiter();
+                awaiter.OnCompleted(() => p.Next(awaiter.GetResult()));
+                return s;
+            }
+        }
+
         [MustUseReturnValue]
         public static (IDisposable disposable, IScope scope) ScopeTuple()
         {

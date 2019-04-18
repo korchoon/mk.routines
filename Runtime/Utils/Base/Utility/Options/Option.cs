@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 using UnityEngine;
 using Utility.AssertN;
@@ -14,10 +13,10 @@ namespace Lib.Utility
         // ReSharper disable once StaticMemberInGenericType
         public static readonly bool IsValueType;
 
-        [OdinSerialize, ShowInInspector, SerializeField]
+        [OdinSerialize, SerializeField]
         public bool HasValue { get; private set; }
 
-        [OdinSerialize, HideLabel, HideReferenceObjectPicker, SerializeField]
+        [OdinSerialize,  SerializeField]
         T Value { get; set; }
 
         public static implicit operator Option<T>(T arg)

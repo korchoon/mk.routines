@@ -1,4 +1,5 @@
-﻿using Game.Proto;
+﻿#if ODIN_INSPECTOR
+using Game.Proto;
 using JetBrains.Annotations;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities.Editor;
@@ -31,3 +32,4 @@ namespace Drawers
         }
     }
 }
+#endif
