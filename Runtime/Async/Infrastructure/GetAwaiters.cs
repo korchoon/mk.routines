@@ -1,5 +1,4 @@
-﻿using System;
-using Lib.DataFlow;
+﻿using Lib.DataFlow;
 using Lib.Timers;
 using UnityEngine;
 
@@ -7,6 +6,8 @@ namespace Lib.Async
 {
     public static class GetAwaiters
     {
+        static ISub DefaultSch => Sch.Update;
+
         public static SingleAwaiter<T> GetAwaiter<T>(this ISub<T> s) => new SingleAwaiter<T>(s);
         public static SingleAwaiter GetAwaiter(this ISub aw)
         {
@@ -28,7 +29,7 @@ namespace Lib.Async
 
         public static async Routine Delay(float seconds, ISub s = null)
         {
-            s = s ?? Sch.Update;
+            s = s ?? DefaultSch;
             var delay = new TimeToken(seconds, Time.time);
             while (delay.KeepWaiting(Time.time))
                 await s;

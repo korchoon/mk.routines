@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Lib.DataFlow;
 using Lib.Utility;
+using UnityEngine.Assertions;
 using Utility;
 
 namespace Lib.Async
@@ -33,12 +34,20 @@ namespace Lib.Async
             PubErr = ReactExperimental.ErrScope(out _onErr);
         }
 
-        public void Dispose() => _dispose.Dispose();
+        public void Dispose()
+        {
+            if (IsCompleted) return;
+            Assert.IsFalse(IsCompleted);
+            IsCompleted = true;
+            MoveNext.Invoke();
+            MoveNext = Empty.Action();
+            _dispose.Dispose();
+        }
 
         [UsedImplicitly]
         public Awaiter GetAwaiter() => new Awaiter(this, _onErr, ref MoveNext);
 
-        public bool IsCompleted { get; internal set; }
+        public bool IsCompleted { get; private set; }
 
         public class Awaiter : ICriticalNotifyCompletion, IBreakableAwaiter
         {
@@ -51,7 +60,7 @@ namespace Lib.Async
                 AwaitableTask = par;
                 _continuation = Empty.Action();
                 onErr.OnDispose(_DisposeWith);
-                onMoveNext += Step;
+                onMoveNext = Step;
             }
 
             void Step()
@@ -90,7 +99,10 @@ namespace Lib.Async
 
             public void UnsafeOnCompleted(Action continuation) => ((INotifyCompletion) this).OnCompleted(continuation);
 
-            public void BreakOn(IScope scope) => scope.OnDispose(AwaitableTask.Dispose);
+            public void Break()
+            {
+                AwaitableTask.Dispose();
+            }
         }
     }
 }

@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Security;
 using JetBrains.Annotations;
 using Lib.DataFlow;
 using Utility;
 using Utility.AssertN;
-using Debug = UnityEngine.Debug;
 
 namespace Lib.Async
 {
@@ -14,10 +12,18 @@ namespace Lib.Async
     {
         Action _continuation;
         IAsyncStateMachine _stateMachine;
+        IBreakableAwaiter _break;
 
         RoutineBuilder()
         {
             Task = new Routine<T>();
+            Task.Scope.OnDispose(BreakCur);
+        }
+        void BreakCur()
+        {
+            var b = _break;
+            _break = null;
+            b.Break();
         }
 
         [UsedImplicitly]
@@ -29,11 +35,9 @@ namespace Lib.Async
         [UsedImplicitly]
         public void SetException(Exception e)
         {
-            Task.IsCompleted = true;
             Task.PubErr.DisposeWith(e);
-            Task.MoveNext = Empty.Action();
             Task.Dispose();
-            
+
             if (e is RoutineStoppedException)
             {
             }
@@ -48,10 +52,8 @@ namespace Lib.Async
         [UsedImplicitly]
         public void SetResult(T value)
         {
-            Task.IsCompleted = true;
             Task.Complete(value);
             Task.MoveNext.Invoke();
-            Task.MoveNext = Empty.Action();
             Task.Dispose();
         }
 
@@ -61,7 +63,11 @@ namespace Lib.Async
             where TStateMachine : IAsyncStateMachine
         {
             if (awaiter is IBreakableAwaiter braw)
-                braw.BreakOn(Task.Scope);
+            {
+//                BreakCur();
+//                Task.Scope.OnDispose(braw.Break);
+                _break = braw;
+            }
             else
                 Asr.Fail("passed unbreakable awaiter");
 
@@ -79,8 +85,9 @@ namespace Lib.Async
         {
             _stateMachine = stateMachine;
             _continuation = _stateMachine.MoveNext;
-            
+
             if (ScheduleRunner.WantsQuit) return; // todo dirty hack
+
 
             _continuation();
 //            Asr.IsNotNull(_yieldOn, $"{this} has no known awaiter will not moveNext");

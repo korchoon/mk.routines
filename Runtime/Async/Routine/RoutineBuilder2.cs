@@ -14,10 +14,19 @@ namespace Lib.Async
     {
         Action _continuation;
         IAsyncStateMachine _stateMachine;
+        IBreakableAwaiter _break;
 
         RoutineBuilder2()
         {
             Task = new Routine();
+            Task._scope.OnDispose(BreakCur);
+        }
+
+        void BreakCur()
+        {
+            var b = _break;
+            _break = null;
+            b?.Break();
         }
 
         [UsedImplicitly]
@@ -29,11 +38,9 @@ namespace Lib.Async
         [UsedImplicitly]
         public void SetException(Exception e)
         {
-            Task.IsCompleted = true;
             Task.PubErr.DisposeWith(e);
-            Task.MoveNext = Empty.Action();
             Task.Dispose();
-            
+
             if (e is RoutineStoppedException)
             {
             }
@@ -48,9 +55,6 @@ namespace Lib.Async
         [UsedImplicitly]
         public void SetResult()
         {
-            Task.IsCompleted = true;
-            Task.MoveNext.Invoke();
-            Task.MoveNext = Empty.Action();
             Task.Dispose();
         }
 
@@ -60,7 +64,11 @@ namespace Lib.Async
             where TStateMachine : IAsyncStateMachine
         {
             if (awaiter is IBreakableAwaiter braw)
-                braw.BreakOn(Task._scope);
+            {
+//                Task._scope.OnDispose(braw.Break);
+
+                _break = braw;
+            }
             else
                 Asr.Fail("passed unbreakable awaiter");
 

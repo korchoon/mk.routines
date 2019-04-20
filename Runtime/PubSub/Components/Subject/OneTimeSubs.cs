@@ -2,20 +2,21 @@
 using System.Collections.Generic;
 using Lib.Async;
 using Lib.Pooling;
+using UnityEngine.Assertions;
 
 namespace Lib.DataFlow
 {
     internal sealed class OneTimeSubs : IDisposable, IScope
         // promise?
     {
-        Queue<Action> _pending;
+        Stack<Action> _pending;
         CompleteToken _d;
 
         public static Pool<OneTimeSubs> Pool { get; } = new Pool<OneTimeSubs>(() => new OneTimeSubs(), subs => subs.Reset());
 
         public OneTimeSubs()
         {
-            _pending = new Queue<Action>();
+            _pending = new Stack<Action>();
             _d = new CompleteToken();
         }
 
@@ -25,12 +26,13 @@ namespace Lib.DataFlow
 
             while (_pending.Count > 0)
             {
-                var uof = _pending.Dequeue();
-                uof.Invoke();
+                var dispose = _pending.Pop();
+                dispose.Invoke();
             }
+            Assert.IsTrue(_pending.Count < 300);
         }
 
-        public void OnDispose(Action moveNext) => _pending.Enqueue(moveNext);
+        public void OnDispose(Action moveNext) => _pending.Push(moveNext);
 
         void Reset()
         {

@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Lib.DataFlow;
 using Lib.Utility;
+using UnityEngine.Assertions;
 using Utility;
 using Utility.AssertN;
 
@@ -39,6 +40,11 @@ namespace Lib.Async
 
         internal void Dispose()
         {
+            if (IsCompleted) return;
+            Assert.IsFalse(IsCompleted);
+            MoveNext.Invoke();
+            IsCompleted = true;
+            MoveNext = Empty.Action();
             _dispose.Dispose();
         }
 
@@ -53,6 +59,7 @@ namespace Lib.Async
         public bool IsCompleted { get; internal set; }
 
         static async Routine<Option<T>> _Internal(Routine<T> routine) => await routine;
+
         public void Complete(T value)
         {
             _res = value;
@@ -70,7 +77,7 @@ namespace Lib.Async
                 _awaitableTask = par;
                 _continuation = Empty.Action();
                 onErr.OnDispose(_DisposeWith);
-                onMoveNext += Step;
+                onMoveNext = Step;
             }
 
             void Step()
@@ -95,7 +102,7 @@ namespace Lib.Async
                     throw err;
 
                 if (_awaitableTask.GetResult().TryGet(out var result)) return result;
-                
+
                 Asr.Fail("default return value");
                 return default;
             }
@@ -113,8 +120,10 @@ namespace Lib.Async
 
             public void UnsafeOnCompleted(Action continuation) => ((INotifyCompletion) this).OnCompleted(continuation);
 
-            public void BreakOn(IScope scope) => scope.OnDispose(_awaitableTask._dispose.Dispose);
+            public void Break()
+            {
+                _awaitableTask._dispose.Dispose();
+            }
         }
-
     }
 }
