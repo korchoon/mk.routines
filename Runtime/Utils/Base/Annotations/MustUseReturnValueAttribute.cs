@@ -6,7 +6,7 @@ namespace JetBrains.Annotations
 {
     [AttributeUsage(AttributeTargets.Method)]
     [Conditional("JETBRAINS_ANNOTATIONS")]
-    public sealed class MustUseReturnValueAttribute : Attribute
+    internal sealed class MustUseReturnValueAttribute : Attribute
     {
         [CanBeNull] public string Justification { get; private set; }
 

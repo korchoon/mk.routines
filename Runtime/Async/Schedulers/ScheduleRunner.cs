@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Lib.DataFlow;
 using Lib.Utility;
-using Sirenix.OdinInspector;
 using UnityEngine;
 using Utility;
 using Utility.AssertN;
@@ -23,7 +22,6 @@ namespace Lib.Async
         public float Logic = 0.1f;
 //            public float Net = 0.05f;
 
-        [ShowInInspector]
         static float Physics
         {
             get => Time.fixedDeltaTime;

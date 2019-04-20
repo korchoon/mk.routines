@@ -1,5 +1,4 @@
 using System;
-using Sirenix.OdinInspector;
 
 namespace Lib.Pooling
 {
@@ -24,7 +23,6 @@ namespace Lib.Pooling
             ++_total;
         }
 
-        [ShowInInspector, HideLabel]
         public string _Inactive => $"{_inactive}/{_total}";
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if ODIN_INSPECTOR
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Game.Proto;
@@ -55,3 +56,4 @@ namespace Drawers
     }
 #endif
 }
+#endif

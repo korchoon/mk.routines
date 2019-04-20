@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.IO;
 using Lib.Utility;
-using Sirenix.Utilities;
 using Debug = UnityEngine.Debug;
 
 namespace Utility
@@ -16,7 +15,7 @@ namespace Utility
             var filename = Path.GetFileNameWithoutExtension(fr.GetFileName());
 
             var pre = opt.TryGet(out var val) ? $"{val.ToString()}: " : string.Empty;
-            Debug.Log($"{pre}{filename}.{fr.GetMethod().GetNiceName()} : {fr.GetFileLineNumber()}");
+            Debug.Log($"{pre}{filename}.{fr.GetMethod().Name} : {fr.GetFileLineNumber()}");
         }
 
         [Conditional(FLAGS.DEBUG)]

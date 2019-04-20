@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Sirenix.Utilities;
 using Utility.AssertN;
 
 namespace Lib
 {
     public static class ScriptingDefineUtil
     {
+        public static bool IsNullOrWhitespace(this string s) => string.IsNullOrWhiteSpace(s);
+        
         static StringComparer _comparer = StringComparer.Ordinal;
 
         public static bool TryAddFlag(string flag, string symbols, out string result)

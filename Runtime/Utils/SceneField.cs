@@ -3,26 +3,34 @@ using System.IO;
 using System.Linq;
 using Lib.Async;
 using Lib.DataFlow;
-using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
+
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
 
 #pragma warning disable 649
 
 namespace Lib.Templates
 {
-    [Serializable, InlineProperty]
+    [Serializable]
+#if ODIN_INSPECTOR
+    [InlineProperty]
+#endif
     public class SceneField
     {
 #if UNITY_EDITOR
+#if ODIN_INSPECTOR
         [HideLabel, ShowInInspector, HorizontalGroup(Width = 0.5f, GroupName = "1"), PropertyOrder(1)]
+#endif
         Object _sceneAsset2
         {
             get =>
                 (from scene in UnityEditor.EditorBuildSettings.scenes
                     let filename = Path.GetFileNameWithoutExtension(scene.path)
-                    where scene.enabled && StringComparer.OrdinalIgnoreCase.Equals(filename, _sceneName) 
+                    where scene.enabled && StringComparer.OrdinalIgnoreCase.Equals(filename, _sceneName)
                     select UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEditor.SceneAsset>(scene.path))
                 .FirstOrDefault();
 
@@ -31,8 +39,10 @@ namespace Lib.Templates
 
 #endif
 
-
-        [SerializeField, HideLabel, ReadOnly, HorizontalGroup(Width = 0.5f, GroupName = "1"), PropertyOrder(2)]
+        [SerializeField,]
+#if ODIN_INSPECTOR
+        [HideLabel, ReadOnly, HorizontalGroup(Width = 0.5f, GroupName = "1"), PropertyOrder(2)]
+#endif
         string _sceneName;
 
         // for LoadLevel/LoadScene

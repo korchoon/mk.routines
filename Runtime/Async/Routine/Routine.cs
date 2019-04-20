@@ -5,12 +5,11 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Lib.DataFlow;
 using Lib.Utility;
-using Sirenix.OdinInspector;
 using Utility;
 
 namespace Lib.Async
 {
-    [AsyncMethodBuilder(typeof(RoutineBuilder2)), ShowInInspector, HideReferenceObjectPicker]
+    [AsyncMethodBuilder(typeof(RoutineBuilder2))]
     public sealed class Routine : IAwait, IDisposable
     {
         IDisposable _dispose;
@@ -43,13 +42,13 @@ namespace Lib.Async
 
         public class Awaiter : ICriticalNotifyCompletion, IBreakableAwaiter
         {
-            Routine _awaitableTask;
+            internal Routine AwaitableTask;
             Action _continuation;
             Option<Exception> _exception;
 
             public Awaiter(Routine par, IScope<Exception> onErr, ref Action onMoveNext)
             {
-                _awaitableTask = par;
+                AwaitableTask = par;
                 _continuation = Empty.Action();
                 onErr.OnDispose(_DisposeWith);
                 onMoveNext += Step;
@@ -68,7 +67,7 @@ namespace Lib.Async
                 m.Invoke();
             }
 
-            [UsedImplicitly] public bool IsCompleted => _awaitableTask.IsCompleted;
+            [UsedImplicitly] public bool IsCompleted => AwaitableTask.IsCompleted;
 
             [UsedImplicitly]
             public void GetResult()
@@ -91,7 +90,7 @@ namespace Lib.Async
 
             public void UnsafeOnCompleted(Action continuation) => ((INotifyCompletion) this).OnCompleted(continuation);
 
-            public void BreakOn(IScope scope) => scope.OnDispose(_awaitableTask.Dispose);
+            public void BreakOn(IScope scope) => scope.OnDispose(AwaitableTask.Dispose);
         }
     }
 }
