@@ -9,7 +9,7 @@ namespace Lib.DataFlow
     internal class Subject<T> : ISub<T>, IPub<T>
     {
         internal readonly CompleteToken Completed;
-        readonly OneTimeSubs _comp;
+        readonly DisposableSubject _comp;
         readonly Subscribers<T> _next;
 
         static readonly Pool<Subscribers<T>> NextPool = new Pool<Subscribers<T>>(() => new Subscribers<T>(), subs => subs.Reset());
@@ -17,7 +17,7 @@ namespace Lib.DataFlow
         public Subject(IScope scope)
         {
             scope.OnDispose(_Dispose);
-            _comp = OneTimeSubs.Pool._GetRaw();
+            _comp = DisposableSubject.Pool._GetRaw();
             _next = NextPool._GetRaw();
             Completed = new CompleteToken();
         }
@@ -28,7 +28,7 @@ namespace Lib.DataFlow
 
             _comp.Dispose();
             _next.Dispose();
-            OneTimeSubs.Pool._ReleaseRaw(_comp);
+            DisposableSubject.Pool._ReleaseRaw(_comp);
 
             NextPool._ReleaseRaw(_next);
         }
@@ -83,7 +83,7 @@ namespace Lib.DataFlow
     internal class Subject : ISub, IPub
     {
         internal readonly CompleteToken Completed;
-        readonly OneTimeSubs _comp;
+        readonly DisposableSubject _comp;
         readonly Subscribers _next;
 
         static readonly Pool<Subscribers> NextPool = new Pool<Subscribers>(() => new Subscribers(), subs => subs.Reset());
@@ -91,7 +91,7 @@ namespace Lib.DataFlow
         public Subject(IScope scope)
         {
             scope.OnDispose(_Dispose);
-            _comp = OneTimeSubs.Pool._GetRaw();
+            _comp = DisposableSubject.Pool._GetRaw();
             _next = NextPool._GetRaw();
             Completed = new CompleteToken();
         }
@@ -103,7 +103,7 @@ namespace Lib.DataFlow
 
             _comp.Dispose();
             _next.Dispose();
-            OneTimeSubs.Pool._ReleaseRaw(_comp);
+            DisposableSubject.Pool._ReleaseRaw(_comp);
 
             NextPool._ReleaseRaw(_next);
         }

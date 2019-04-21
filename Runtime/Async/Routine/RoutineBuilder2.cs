@@ -10,18 +10,18 @@ using Debug = UnityEngine.Debug;
 
 namespace Lib.Async
 {
-    public class RoutineBuilder2
+    public class RoutineBuilder
     {
         Action _continuation;
         IAsyncStateMachine _stateMachine;
 
-        RoutineBuilder2()
+        RoutineBuilder()
         {
             Task = new Routine();
         }
 
         [UsedImplicitly]
-        public static RoutineBuilder2 Create() => new RoutineBuilder2();
+        public static RoutineBuilder Create() => new RoutineBuilder();
 
         [UsedImplicitly] public Routine Task { get; }
 
@@ -33,7 +33,7 @@ namespace Lib.Async
             Task.PubErr.DisposeWith(e);
             Task.MoveNext = Empty.Action();
             Task.Dispose();
-            
+
             if (e is RoutineStoppedException)
             {
             }
@@ -48,6 +48,7 @@ namespace Lib.Async
         [UsedImplicitly]
         public void SetResult()
         {
+//            Tracer.Pub(this, t => t.SetResult);
             Task.IsCompleted = true;
             Task.MoveNext.Invoke();
             Task.MoveNext = Empty.Action();
@@ -88,6 +89,11 @@ namespace Lib.Async
         [UsedImplicitly]
         public void SetStateMachine(IAsyncStateMachine stateMachine)
         {
+        }
+
+        public class Tracer : DebugEvents<Tracer, RoutineBuilder>
+        {
+            internal Subject SetResult;
         }
     }
 }

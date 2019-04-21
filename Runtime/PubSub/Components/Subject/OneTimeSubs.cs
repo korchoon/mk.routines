@@ -4,7 +4,8 @@ using Lib.Pooling;
 
 namespace Lib.DataFlow
 {
-    internal sealed class OneTimeSubs : IDisposable, IScope
+#if M_DISABLED
+     internal sealed class OneTimeSubs : IDisposable, IScope
         // promise?
     {
         Queue<Action> _pending;
@@ -37,5 +38,6 @@ namespace Lib.DataFlow
             _pending.Clear();
         }
     }
+#endif
 
 }

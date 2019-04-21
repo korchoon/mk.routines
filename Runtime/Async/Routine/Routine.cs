@@ -9,7 +9,7 @@ using Utility;
 
 namespace Lib.Async
 {
-    [AsyncMethodBuilder(typeof(RoutineBuilder2))]
+    [AsyncMethodBuilder(typeof(RoutineBuilder))]
     public sealed class Routine : IAwait, IDisposable
     {
         IDisposable _dispose;

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using Lib.DataFlow;
 using Utility;
 using Utility.AssertN;
 using Debug = UnityEngine.Debug;
@@ -21,7 +22,8 @@ namespace Lib.Async
 
     public abstract class DebugEvents<TEvents, TTarget> where TEvents : DebugEvents<TEvents, TTarget>, new() where TTarget : class
     {
-        public static event Action<TEvents> OnNew;
+        public static ISub<SubWrapper<TEvents>> OnNew;
+        static IPub<SubWrapper<TEvents>> _pubNew;
 
         int _id;
         static Dictionary<int, TEvents> _eventRegistry;
@@ -29,6 +31,7 @@ namespace Lib.Async
 
         static DebugEvents()
         {
+            OnNew = new Subject<SubWrapper<TEvents>>(Empty.Scope());
             _eventRegistry = new Dictionary<int, TEvents>();
             _targetRegistry = new Dictionary<int, WeakReference<TTarget>>();
         }
@@ -40,7 +43,9 @@ namespace Lib.Async
             _eventRegistry.Add(events._id, events);
             var weakReference = new WeakReference<TTarget>(target);
             _targetRegistry.Add(events._id, weakReference);
-            OnNew?.Invoke(events);
+
+            var wrap = new SubWrapper<TEvents>(events);
+            _pubNew.Next(wrap);
         }
 
         [Conditional(FLAGS.DEBUG)]
@@ -50,22 +55,51 @@ namespace Lib.Async
             _eventRegistry.Remove(hash);
         }
 
-        static TEvents Locate(TTarget o) => _eventRegistry[o.GetHashCode()];
+        static TEvents _Locate(TTarget o) => _eventRegistry[o.GetHashCode()];
 
         [Conditional(FLAGS.DEBUG)]
-        public static void Report(TTarget o, Func<TEvents, Action> t)
+        static void Report(TTarget o, Func<TEvents, Action> t)
         {
-            var target = Locate(o);
+            var target = _Locate(o);
             var method = t.Invoke(target);
             method?.Invoke();
         }
 
         [Conditional(FLAGS.DEBUG)]
-        public static void Report<T>(TTarget o, Func<TEvents, Action<T>> t, T arg)
+        static void Report<T>(TTarget o, Func<TEvents, Action<T>> t, T arg)
         {
-            var target = Locate(o);
+            var target = _Locate(o);
             var method = t.Invoke(target);
             method?.Invoke(arg);
         }
+
+        [Conditional(FLAGS.DEBUG)]
+        public static void Pub(TTarget o, Func<TEvents, IPub> selector)
+        {
+            var target = _Locate(o);
+            var method = selector.Invoke(target);
+            method?.Next();
+        }
+
+        [Conditional(FLAGS.DEBUG)]
+        public static void Pub<T>(TTarget o, Func<TEvents, IPub<T>> selector, T arg)
+        {
+            var target = _Locate(o);
+            var method = selector.Invoke(target);
+            method?.Next(arg);
+        }
+    }
+
+    public class SubWrapper<T>
+    {
+        T _t;
+
+        public SubWrapper(T t)
+        {
+            _t = t;
+        }
+
+        public ISub Sub(Func<T, ISub> selector) => selector.Invoke(_t);
+        public ISub<TArg> Sub<TArg>(Func<T, ISub<TArg>> selector) => selector.Invoke(_t);
     }
 }
