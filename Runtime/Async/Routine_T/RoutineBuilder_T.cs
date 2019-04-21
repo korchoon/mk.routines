@@ -61,7 +61,9 @@ namespace Lib.Async
             where TStateMachine : IAsyncStateMachine
         {
             if (awaiter is IBreakableAwaiter braw)
-                braw.BreakOn(Task.Scope);
+            {
+                Task.Scope.OnDispose(braw.Break);
+            }
             else
                 Asr.Fail("passed unbreakable awaiter");
 

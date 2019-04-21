@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Lib.Async;
+using UnityEngine.Assertions;
 
 namespace Lib.DataFlow
 {
@@ -34,6 +35,8 @@ namespace Lib.DataFlow
                 dispose();
                 return;
             }
+            
+//            Assert.IsTrue(_stack.Count < 300);
                 
             _stack.Push(dispose);
         }

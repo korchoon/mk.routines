@@ -53,6 +53,7 @@ namespace Lib.Async
         public bool IsCompleted { get; internal set; }
 
         static async Routine<Option<T>> _Internal(Routine<T> routine) => await routine;
+
         public void Complete(T value)
         {
             _res = value;
@@ -95,7 +96,7 @@ namespace Lib.Async
                     throw err;
 
                 if (_awaitableTask.GetResult().TryGet(out var result)) return result;
-                
+
                 Asr.Fail("default return value");
                 return default;
             }
@@ -113,8 +114,12 @@ namespace Lib.Async
 
             public void UnsafeOnCompleted(Action continuation) => ((INotifyCompletion) this).OnCompleted(continuation);
 
-            public void BreakOn(IScope scope) => scope.OnDispose(_awaitableTask._dispose.Dispose);
-        }
+            public void BreakOn(IScope scope) => scope.OnDispose(Break);
 
+            public void Break()
+            {
+                _awaitableTask._dispose.Dispose();
+            }
+        }
     }
 }

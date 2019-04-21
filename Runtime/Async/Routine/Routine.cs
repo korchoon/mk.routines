@@ -90,7 +90,11 @@ namespace Lib.Async
 
             public void UnsafeOnCompleted(Action continuation) => ((INotifyCompletion) this).OnCompleted(continuation);
 
-            public void BreakOn(IScope scope) => scope.OnDispose(AwaitableTask.Dispose);
+            public void BreakOn(IScope scope) => scope.OnDispose(Break);
+            public void Break()
+            {
+                AwaitableTask.Dispose();
+            }
         }
     }
 }

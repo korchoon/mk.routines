@@ -46,7 +46,7 @@ namespace Lib.Async
             return false;
         }
 
-        void Break()
+        public void Break()
         {
             _stopRequested = true;
             Dispose();
@@ -60,11 +60,6 @@ namespace Lib.Async
             var m = _continuation ?? Empty.Action();
             _continuation = Empty.Action();
             m();
-        }
-
-        public void BreakOn(IScope scope)
-        {
-            scope.OnDispose(Break);
         }
     }
 
@@ -112,7 +107,7 @@ namespace Lib.Async
             _continuation = moveNext;
         }
 
-        void Break()
+        public void Break()
         {
             _stopRequested = true;
             Dispose();
@@ -126,11 +121,6 @@ namespace Lib.Async
             var m = _continuation ?? Empty.Action();
             _continuation = Empty.Action();
             m();
-        }
-
-        public void BreakOn(IScope scope)
-        {
-            scope.OnDispose(Break);
         }
     }
 }

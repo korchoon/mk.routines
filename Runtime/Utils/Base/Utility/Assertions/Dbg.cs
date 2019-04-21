@@ -65,5 +65,9 @@ namespace Utility
 
             Debug.LogError(s);
         }
+
+        public static void LogFull()
+        {
+        }
     }
 }
