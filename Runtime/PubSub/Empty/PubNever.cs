@@ -9,6 +9,7 @@ namespace Lib.DataFlow
             return false;
         }
     }
+
     internal class PubNever<T> : IPub<T>
     {
         public static PubNever<T> Ever { get; } = new PubNever<T>();

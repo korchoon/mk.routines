@@ -23,6 +23,6 @@ namespace Lib.Pooling
             ++_total;
         }
 
-        public string _Inactive => $"{_inactive}/{_total}";
+        public override string ToString() => $"{_inactive}/{_total}";
     }
 }
