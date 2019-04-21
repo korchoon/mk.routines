@@ -8,7 +8,7 @@ using Utility.AssertN;
 namespace Lib.DataFlow
 {
     [NonPerformant(PerfKind.GC)]
-    public sealed class Subscribers : IPub
+    internal sealed class Subscribers : IPub
     {
         Queue<Func<bool>> _next;
         Queue<Func<bool>> _current;
@@ -84,7 +84,7 @@ namespace Lib.DataFlow
 
 
     [NonPerformant(PerfKind.GC)]
-    public sealed class Subscribers<T> : IPub<T>
+    internal sealed class Subscribers<T> : IPub<T>
     {
         Queue<Func<T, bool>> _next;
         Queue<Func<T, bool>> _current;

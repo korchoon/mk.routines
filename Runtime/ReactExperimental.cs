@@ -68,7 +68,7 @@ namespace Lib
         [MustUseReturnValue]
         public static IDisposeWith<Exception> ErrScope(out IScope<Exception> scope)
         {
-            return new Catch(out scope);
+            return new CatchSubject(out scope);
         }
 
         public static ISub<T> ToSub<T>(Func<IPub<T>, Routine> ctor, IScope scope)
