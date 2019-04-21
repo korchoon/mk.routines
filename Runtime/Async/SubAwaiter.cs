@@ -9,12 +9,12 @@ using Utility.AssertN;
 
 namespace Lib.Async
 {
-    public class SingleAwaiter : ICriticalNotifyCompletion, IBreakableAwaiter
+    public class SubAwaiter : ICriticalNotifyCompletion, IBreakableAwaiter
     {
         Action _continuation;
         bool _stopRequested;
 
-        public SingleAwaiter()
+        public SubAwaiter()
         {
             _continuation = Empty.Action();
         }
@@ -30,7 +30,7 @@ namespace Lib.Async
         {
             if (IsCompleted)
             {
-                moveNext();
+                moveNext(); // todo
                 return;
             }
 
@@ -100,7 +100,7 @@ namespace Lib.Async
         {
             if (IsCompleted)
             {
-                moveNext();
+                moveNext(); // todo
                 return;
             }
 

@@ -51,7 +51,7 @@ namespace Lib.DataFlow
 
             if (_disposed)
             {
-                dispose(); //todo reason
+                dispose(); //todo probable reason
                 return;
             }
 

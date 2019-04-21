@@ -9,16 +9,16 @@ namespace Lib.Async
         static ISub DefaultSch => Sch.Update;
 
         public static SingleAwaiter<T> GetAwaiter<T>(this ISub<T> s) => new SingleAwaiter<T>(s);
-        public static SingleAwaiter GetAwaiter(this ISub aw)
+        public static SubAwaiter GetAwaiter(this ISub aw)
         {
-            var res = new SingleAwaiter();
+            var res = new SubAwaiter();
             aw.OnNext(res.OneOff);
             return res;
         }
 
-        public static SingleAwaiter GetAwaiter(this IScope aw)
+        public static SubAwaiter GetAwaiter(this IScope aw)
         {
-            var res = new SingleAwaiter();
+            var res = new SubAwaiter();
             aw.OnDispose(() => res.Dispose());
             return res;
         }
