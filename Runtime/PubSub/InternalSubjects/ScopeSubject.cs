@@ -25,7 +25,7 @@ namespace Lib.DataFlow
         void _SetNew()
         {
             TraceScope.Register(this);
-            
+
             _disposed = false;
             Asr.IsTrue(_stack.Count == 0);
             _stack.Clear();
@@ -41,17 +41,17 @@ namespace Lib.DataFlow
                 var dispose = _stack.Pop();
                 dispose.Invoke();
             }
-            
+
             TraceScope.Pub(this, t => t.AfterDispose);
         }
 
         public void OnDispose(Action dispose)
         {
             TraceScope.Pub(this, t => t.AfterDispose);
-            
+
             if (_disposed)
             {
-//                dispose();
+                dispose(); //todo reason
                 return;
             }
 
@@ -63,18 +63,18 @@ namespace Lib.DataFlow
 
     public class TraceScope : DebugTracer<TraceScope, IScope>
     {
-        internal Action<DisposeAction> OnDispose;
+        internal Action<DisposeActionInfo> OnDispose;
         internal Action AfterDispose;
-        internal Action ImmediateOnDispose;
+        internal Action<DisposeActionInfo> SubscribeAfterDispose;
     }
 
-    public class DisposeAction
+    public class DisposeActionInfo
     {
         string _toString;
         string _trace;
         public override string ToString() => _trace;
 
-        public DisposeAction(Action a)
+        public DisposeActionInfo(Action a)
         {
             _toString = a.Method.GetNiceName();
             var frame = new StackTrace(true).GetFrame(3);

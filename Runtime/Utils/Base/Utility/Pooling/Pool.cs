@@ -18,9 +18,9 @@ namespace Lib.Pooling
 
         public Pool(Func<T> ctor, Action<T> reset, Action<T> destroy = null)
         {
+            _ctor = ctor;
 #if !M_DISABLE_POOLING
             _destroy = destroy ?? ActionEmpty<T>.Empty;
-            _ctor = ctor;
             _reset = reset;
             _stack = new Stack<T>();
 #endif
@@ -62,7 +62,7 @@ namespace Lib.Pooling
 
         public void Dispose()
         {
-#if M_DISABLE_POOLING
+#if !M_DISABLE_POOLING
             while (_stack.Count > 0)
             {
                 var t = _stack.Pop();
