@@ -9,18 +9,7 @@ using Debug = UnityEngine.Debug;
 
 namespace Lib.Async
 {
-    public static class ReportExt
-    {
-        public static void Report(this object o, Action<Action> del)
-        {
-        }
-
-        public static void Report<T>(this object o, MethodBase b) where T : Delegate
-        {
-        }
-    }
-
-    public abstract class DebugEvents<TEvents, TTarget> where TEvents : DebugEvents<TEvents, TTarget>, new() where TTarget : class
+    public abstract class DebugTracer3<TEvents, TTarget> where TEvents : DebugTracer3<TEvents, TTarget>, new() where TTarget : class
     {
         public static ISub<SubWrapper<TEvents>> OnNew;
         static IPub<SubWrapper<TEvents>> _pubNew;
@@ -29,7 +18,7 @@ namespace Lib.Async
         static Dictionary<int, TEvents> _eventRegistry;
         static Dictionary<int, WeakReference<TTarget>> _targetRegistry;
 
-        static DebugEvents()
+        static DebugTracer3()
         {
             OnNew = new Subject<SubWrapper<TEvents>>(Empty.Scope());
             _eventRegistry = new Dictionary<int, TEvents>();
@@ -99,7 +88,12 @@ namespace Lib.Async
             _t = t;
         }
 
-        public ISub Sub(Func<T, ISub> selector) => selector.Invoke(_t);
+        public ISub Sub(Func<T, ISub> selector)
+        {
+            var res = selector.Invoke(_t);
+            return res;
+        }
+
         public ISub<TArg> Sub<TArg>(Func<T, ISub<TArg>> selector) => selector.Invoke(_t);
     }
 }

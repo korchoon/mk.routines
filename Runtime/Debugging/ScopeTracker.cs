@@ -14,10 +14,9 @@ namespace Lib.Async
 
         public class Disposable
         {
-            
         }
     }
-    
+
     public class ScopeTracker : OdinEditorWindow
     {
         [MenuItem("Tools/Scopes")]
@@ -28,12 +27,10 @@ namespace Lib.Async
             // Nifty little trick to quickly position the window in the middle of the editor.
             window.position = GUIHelper.GetEditorWindowRect().AlignCenter(700, 700);
         }
-        
-        
+
 
         protected override void OnEnable()
         {
-            
         }
     }
 }

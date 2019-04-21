@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using Lib.Async;
 using Lib.Pooling;
+using Sirenix.Utilities;
 using UnityEngine.Assertions;
 using Utility.AssertN;
 
@@ -19,6 +22,15 @@ namespace Lib.DataFlow
             _SetNew();
         }
 
+        void _SetNew()
+        {
+            TraceScope.Register(this);
+            
+            _disposed = false;
+            Asr.IsTrue(_stack.Count == 0);
+            _stack.Clear();
+        }
+
         public void Dispose()
         {
             if (_disposed) return;
@@ -29,13 +41,17 @@ namespace Lib.DataFlow
                 var dispose = _stack.Pop();
                 dispose.Invoke();
             }
+            
+            TraceScope.Pub(this, t => t.AfterDispose);
         }
 
         public void OnDispose(Action dispose)
         {
+            TraceScope.Pub(this, t => t.AfterDispose);
+            
             if (_disposed)
             {
-                dispose();
+//                dispose();
                 return;
             }
 
@@ -43,12 +59,26 @@ namespace Lib.DataFlow
 
             _stack.Push(dispose);
         }
+    }
 
-        void _SetNew()
+    public class TraceScope : DebugTracer<TraceScope, IScope>
+    {
+        internal Action<DisposeAction> OnDispose;
+        internal Action AfterDispose;
+        internal Action ImmediateOnDispose;
+    }
+
+    public class DisposeAction
+    {
+        string _toString;
+        string _trace;
+        public override string ToString() => _trace;
+
+        public DisposeAction(Action a)
         {
-            _disposed = false;
-            Asr.IsTrue(_stack.Count == 0);
-            _stack.Clear();
+            _toString = a.Method.GetNiceName();
+            var frame = new StackTrace(true).GetFrame(3);
+            _trace = $"{Path.GetFileNameWithoutExtension(frame.GetFileName())}: {frame.GetMethod().GetNiceName()} : {frame.GetFileLineNumber()}";
         }
     }
 }

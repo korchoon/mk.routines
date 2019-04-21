@@ -91,7 +91,7 @@ namespace Lib.Async
         {
         }
 
-        public class Tracer : DebugEvents<Tracer, RoutineBuilder>
+        public class Tracer : DebugTracer3<Tracer, RoutineBuilder>
         {
             internal Subject SetResult;
         }
