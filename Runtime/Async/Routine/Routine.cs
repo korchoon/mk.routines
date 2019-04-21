@@ -10,7 +10,7 @@ using Utility;
 namespace Lib.Async
 {
     [AsyncMethodBuilder(typeof(RoutineBuilder))]
-    public sealed class Routine : IAwait, IDisposable
+    public sealed class Routine : IDisposable
     {
         IDisposable _dispose;
         internal IScope _scope;

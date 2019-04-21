@@ -27,12 +27,12 @@ namespace Lib.Pooling
             T element;
             if (_stack.Count == 0)
             {
-                _debugPoolCounter.Create();
+                _debugPoolCounter.New();
                 element = _ctor();
             }
             else
             {
-                _debugPoolCounter.Pop();
+                _debugPoolCounter.Get();
                 element = _stack.Pop();
             }
 

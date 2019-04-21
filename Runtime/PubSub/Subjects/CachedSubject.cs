@@ -3,7 +3,7 @@ using Lib.Utility;
 
 namespace Lib.DataFlow
 {
-    public class CachedSubject : IPub, ISub, IAwait
+    public class CachedSubject : IPub, ISub
     {
         readonly Subject _subject;
         bool _value;
@@ -13,11 +13,9 @@ namespace Lib.DataFlow
             _subject = new Subject(scope);
         }
 
-        public bool IsCompleted => _subject.Completed;
-
         public bool Next()
         {
-            if (IsCompleted) return false;
+            if (_subject.Completed) return false;
 
             _value = true;
             return _subject.Next();
@@ -38,7 +36,7 @@ namespace Lib.DataFlow
         }
     }
 
-    public class CachedSubject<T> : IPub<T>, ISub<T>, IAwait
+    public class CachedSubject<T> : IPub<T>, ISub<T>
     {
         readonly Subject<T> _subject;
         Option<T> _value;
@@ -48,11 +46,9 @@ namespace Lib.DataFlow
             _subject = new Subject<T>(scope);
         }
 
-        public bool IsCompleted => _subject.Completed;
-
         public bool Next(T msg)
         {
-            if (IsCompleted) return false;
+            if (_subject.Completed) return false;
 
             _value = msg;
             return _subject.Next(msg);

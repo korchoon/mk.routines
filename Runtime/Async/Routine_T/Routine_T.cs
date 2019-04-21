@@ -12,7 +12,7 @@ using Utility.AssertN;
 namespace Lib.Async
 {
     [AsyncMethodBuilder(typeof(RoutineBuilder<>))]
-    public sealed class Routine<T> : IAwait
+    public sealed class Routine<T>
     {
 #if DEBUG_TRACE
         internal RoutineDebug _debug;

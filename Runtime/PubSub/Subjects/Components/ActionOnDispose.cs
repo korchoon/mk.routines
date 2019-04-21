@@ -1,27 +1,28 @@
 ﻿using System;
 using Game.Proto;
+using JetBrains.Annotations;
 using Lib.DataFlow;
 
 namespace Lib.Utility
 {
-    internal class ActionOnDispose2 : IAwait, IDisposable
+    internal class ActionOnDispose : IDisposable
     {
         Action _onDispose;
 
-        public ActionOnDispose2(Action onDispose)
+        public ActionOnDispose(Action onDispose)
         {
             _onDispose = onDispose;
         }
 
         public void Dispose()
         {
-            if (IsCompleted) return;
+            if (_isCompleted) return;
 
-            IsCompleted = true;
+            _isCompleted = true;
             _onDispose?.Invoke();
             _onDispose = null;
         }
 
-        public bool IsCompleted { get; private set; }
+        bool _isCompleted;
     }
 }

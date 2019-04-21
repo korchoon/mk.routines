@@ -13,12 +13,12 @@ namespace Lib.Pooling
             ++_inactive;
         }
 
-        public void Pop()
+        public void Get()
         {
             --_inactive;
         }
 
-        public void Create()
+        public void New()
         {
             ++_total;
         }

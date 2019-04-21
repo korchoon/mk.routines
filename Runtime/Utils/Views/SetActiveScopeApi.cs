@@ -19,7 +19,7 @@ namespace Lib
 //            Assert.IsNotNull(selectable);
             selectable.interactable = interactableOnStart;
 //            Asr.IsTrue(selectable., $"{selectable.name}.activeInHierarchy == false");
-            return new ActionOnDispose2(() => selectable.interactable = !interactableOnStart);
+            return new ActionOnDispose(() => selectable.interactable = !interactableOnStart);
         }
 
         public static string Path(GameObject g)
@@ -43,7 +43,7 @@ namespace Lib
             gameObject.SetActive(true);
             Warn.IsTrue(gameObject.activeInHierarchy, $"{Path(gameObject)} - should be active after SetActive(true)");
 //            Assert.IsTrue(gameObject.activeInHierarchy, $"{Path(gameObject)}.activeInHierarchy == false");
-            return new ActionOnDispose2(() => gameObject.SetActive(false));
+            return new ActionOnDispose(() => gameObject.SetActive(false));
         }
 
         public static IDisposable ActivateComponentScope(this Behaviour comp)
@@ -51,7 +51,7 @@ namespace Lib
 //            Assert.IsNotNull(comp);
             comp.enabled = true;
 //            Assert.IsTrue(comp.gameObject.activeInHierarchy && comp.enabled);
-            return new ActionOnDispose2(() => comp.enabled = false);
+            return new ActionOnDispose(() => comp.enabled = false);
         }
 
 
@@ -59,7 +59,7 @@ namespace Lib
         {
 //            Assert.IsNotNull(gameObject);
             gameObject.SetActive(false); // todo msg
-            return new ActionOnDispose2(() => gameObject.SetActive(true));
+            return new ActionOnDispose(() => gameObject.SetActive(true));
         }
 
         public static void Activate(this GameObject gameObject, IScope scope)
@@ -87,14 +87,14 @@ namespace Lib
         {
             Assert.IsNotNull(gameObject);
             gameObject.SetActive(true);
-            return new ActionOnDispose2(() => gameObject.SetActive(false));
+            return new ActionOnDispose(() => gameObject.SetActive(false));
         }
 
         public static IDisposable DeactivateScope(this GameObject[] gameObject)
         {
             Assert.IsNotNull(gameObject);
             gameObject.SetActive(false);
-            return new ActionOnDispose2(() => gameObject.SetActive(true));
+            return new ActionOnDispose(() => gameObject.SetActive(true));
         }
 
         public static void Activate(this GameObject[] gameObject, IScope scope)
