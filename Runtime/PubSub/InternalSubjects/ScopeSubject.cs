@@ -11,12 +11,12 @@ namespace Lib.DataFlow
     {
         Stack<Action> _stack;
         bool _disposed;
-        public static Pool<ScopeSubject> Pool { get; } = new Pool<ScopeSubject>(() => new ScopeSubject(), subs => subs.Reset());
+        public static Pool<ScopeSubject> Pool { get; } = new Pool<ScopeSubject>(() => new ScopeSubject(), subs => subs._SetNew());
 
         public ScopeSubject()
         {
             _stack = new Stack<Action>();
-            _disposed = false;
+            _SetNew();
         }
 
         public void Dispose()
@@ -44,7 +44,7 @@ namespace Lib.DataFlow
             _stack.Push(dispose);
         }
 
-        void Reset()
+        void _SetNew()
         {
             _disposed = false;
             Asr.IsTrue(_stack.Count == 0);
