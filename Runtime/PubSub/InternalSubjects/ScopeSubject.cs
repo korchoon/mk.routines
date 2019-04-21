@@ -1,7 +1,9 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Lib.Async;
 using Lib.Pooling;
 using Sirenix.Utilities;
@@ -25,6 +27,7 @@ namespace Lib.DataFlow
         void _SetNew()
         {
             TraceScope.Register(this);
+            TraceScope.Pub(this, t => t.NameOnCreate, new StackTrace(true).SkipWhilePath("Packages")?.FirstOrDefault()?.AsString());
 
             _disposed = false;
             Asr.IsTrue(_stack.Count == 0);
@@ -47,11 +50,11 @@ namespace Lib.DataFlow
 
         public void OnDispose(Action dispose)
         {
-            TraceScope.Pub(this, t => t.AfterDispose);
+            TraceScope.Pub(this, t => t.OnDispose, new DisposeActionInfo(dispose));
 
             if (_disposed)
             {
-                Asr.Fail(TraceUtility.GetFrame(2));
+//                Asr.Fail(TraceUtility.GetFrame(2));
                 dispose.Invoke(); //todo probable reason
                 return;
             }
@@ -62,8 +65,10 @@ namespace Lib.DataFlow
         }
     }
 
-    public class TraceScope : DebugTracer<TraceScope, IScope>
+    internal class TraceScope : DebugTracer<TraceScope, IScope>
     {
+        public Action<StackTrace> CreateStackTrace;
+        public Action<string> NameOnCreate;
         public Action<DisposeActionInfo> OnDispose;
         public Action AfterDispose;
         public Action<DisposeActionInfo> SubscribeAfterDispose;
@@ -80,16 +85,6 @@ namespace Lib.DataFlow
             _toString = a.Method.GetNiceName();
             var frame = new StackTrace(true).GetFrame(3);
             _trace = $"{Path.GetFileNameWithoutExtension(frame.GetFileName())}: {frame.GetMethod().GetNiceName()} : {frame.GetFileLineNumber()}";
-        }
-    }
-
-    public static class TraceUtility
-    {
-        public static string GetFrame(int skip)
-        {
-            var tr = new StackTrace(skip, true);
-            var fr = tr.GetFrame(0);
-            return $"{Path.GetFileNameWithoutExtension(fr.GetFileName())}. {fr.GetMethod().GetNiceName()} : {fr.GetFileLineNumber()}";
         }
     }
 }

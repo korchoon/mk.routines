@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Lib.DataFlow;
+using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
@@ -28,23 +30,34 @@ namespace Lib.Async
             // Nifty little trick to quickly position the window in the middle of the editor.
             window.position = GUIHelper.GetEditorWindowRect().AlignCenter(700, 700);
         }
-        
-        public List<Scope> All = new List<Scope>();
 
+        public List<Scope> All;
 
         protected override void OnEnable()
         {
+            All = new List<Scope>();
             TraceScope.OnNew += OnNew;
 
-            void OnNew(TraceScope traceScope)
+            void OnNew(TraceScope t)
             {
-                
+                var sc = new Scope();
+                All.Add(sc);
+
+                t.NameOnCreate += msg => sc.Name = msg;
+                t.AfterDispose += () => All.Remove(sc);
+                t.OnDispose += i => sc.List.Add(i);
             }
         }
-        
+
+
+        [InlineProperty, HideReferenceObjectPicker, HideLabel]
         public class Scope
         {
-            
+            [HideLabel] public string Name;
+
+            public List<DisposeActionInfo> List = new List<DisposeActionInfo>();
+
+            public bool Disposed;
         }
     }
 }

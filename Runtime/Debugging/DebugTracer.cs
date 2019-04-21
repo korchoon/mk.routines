@@ -8,6 +8,13 @@ using Utility.AssertN;
 
 namespace Lib.Async
 {
+    public abstract class DebugTracerBack<TEvents, TTArget, TCommands> : DebugTracer<TEvents, TTArget>
+        where TTArget : class
+        where TEvents : DebugTracerBack<TEvents, TTArget, TCommands>, new()
+        where TCommands : DebugTracerBack<TEvents, TTArget, TCommands>, new()
+    {
+    }
+
     public abstract class DebugTracer<TEvents, TTarget> where TEvents : DebugTracer<TEvents, TTarget>, new() where TTarget : class
     {
         public static Action<TEvents> OnNew;
@@ -15,7 +22,6 @@ namespace Lib.Async
         // ReSharper disable once StaticMemberInGenericType
         static ObjectIDGenerator Generator;
 
-        long _id;
         static Dictionary<long, TEvents> _eventRegistry;
         static Dictionary<long, WeakReference<TTarget>> _targetRegistry;
 
@@ -30,10 +36,18 @@ namespace Lib.Async
         public static void Register(TTarget target) // scope
         {
             var id = Generator.GetId(target, out var firstTime);
-            var events = new TEvents {_id = id};
-            _eventRegistry.Add(events._id, events);
+            var events = new TEvents();
             var weakReference = new WeakReference<TTarget>(target);
-            _targetRegistry.Add(events._id, weakReference);
+            if (firstTime)
+            {
+                _eventRegistry.Add(id, events);
+                _targetRegistry.Add(id, weakReference);
+            }
+            else // pooled
+            {
+                _eventRegistry[id] = events;
+                _targetRegistry[id] = weakReference;
+            }
 
             OnNew?.Invoke(events);
         }
@@ -47,7 +61,6 @@ namespace Lib.Async
 
         static TEvents _Locate(TTarget o)
         {
-//            var id = Generator.GetId(o, out _);
             var id = Generator.HasId(o, out var firstTime);
             Asr.IsFalse(firstTime);
             return _eventRegistry[id];
