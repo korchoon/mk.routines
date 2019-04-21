@@ -51,7 +51,8 @@ namespace Lib.DataFlow
 
             if (_disposed)
             {
-                dispose(); //todo probable reason
+                Asr.Fail(TraceUtility.GetFrame(2));
+                dispose.Invoke(); //todo probable reason
                 return;
             }
 
@@ -63,9 +64,9 @@ namespace Lib.DataFlow
 
     public class TraceScope : DebugTracer<TraceScope, IScope>
     {
-        internal Action<DisposeActionInfo> OnDispose;
-        internal Action AfterDispose;
-        internal Action<DisposeActionInfo> SubscribeAfterDispose;
+        public Action<DisposeActionInfo> OnDispose;
+        public Action AfterDispose;
+        public Action<DisposeActionInfo> SubscribeAfterDispose;
     }
 
     public class DisposeActionInfo
@@ -79,6 +80,16 @@ namespace Lib.DataFlow
             _toString = a.Method.GetNiceName();
             var frame = new StackTrace(true).GetFrame(3);
             _trace = $"{Path.GetFileNameWithoutExtension(frame.GetFileName())}: {frame.GetMethod().GetNiceName()} : {frame.GetFileLineNumber()}";
+        }
+    }
+
+    public static class TraceUtility
+    {
+        public static string GetFrame(int skip)
+        {
+            var tr = new StackTrace(skip, true);
+            var fr = tr.GetFrame(0);
+            return $"{Path.GetFileNameWithoutExtension(fr.GetFileName())}. {fr.GetMethod().GetNiceName()} : {fr.GetFileLineNumber()}";
         }
     }
 }

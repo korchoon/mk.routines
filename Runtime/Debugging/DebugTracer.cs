@@ -10,7 +10,7 @@ namespace Lib.Async
 {
     public abstract class DebugTracer<TEvents, TTarget> where TEvents : DebugTracer<TEvents, TTarget>, new() where TTarget : class
     {
-        public static Action<SubWrapper<TEvents>> OnNew;
+        public static Action<TEvents> OnNew;
 
         // ReSharper disable once StaticMemberInGenericType
         static ObjectIDGenerator Generator;
@@ -35,8 +35,7 @@ namespace Lib.Async
             var weakReference = new WeakReference<TTarget>(target);
             _targetRegistry.Add(events._id, weakReference);
 
-            var wrap = new SubWrapper<TEvents>(events);
-            OnNew?.Invoke(wrap);
+            OnNew?.Invoke(events);
         }
 
         [Conditional(FLAGS.DEBUG)]
