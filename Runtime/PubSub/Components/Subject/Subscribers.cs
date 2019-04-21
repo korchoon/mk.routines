@@ -32,7 +32,7 @@ namespace Lib.DataFlow
         {
             if (_d) return false;
 
-#if BUG_DOUBLE_SEND
+#if !BUG_DOUBLE_SEND
             Asr.IsTrue(_current.Count == 0); 
             Swap();
 #else
@@ -108,7 +108,7 @@ namespace Lib.DataFlow
         {
             if (_d) return false;
 
-#if BUG_DOUBLE_SEND
+#if !BUG_DOUBLE_SEND
             Asr.IsTrue(_current.Count == 0);
             Swap();
 #else

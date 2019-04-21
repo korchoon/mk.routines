@@ -29,7 +29,7 @@ namespace Lib
         [MustUseReturnValue]
         public static (IDisposable disposable, IScope scope) ScopeTuple()
         {
-            var res = new DisposableSubject();
+            var res = new ScopeSubject();
             return (res, res);
         }
 

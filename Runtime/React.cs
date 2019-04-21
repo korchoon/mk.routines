@@ -21,7 +21,7 @@ namespace Lib
         [MustUseReturnValue]
         public static IDisposable Scope(out IScope scope)
         {
-            var subject = new DisposableSubject();
+            var subject = new ScopeSubject();
             scope = subject;
             return subject;
         }
@@ -29,7 +29,7 @@ namespace Lib
         [MustUseReturnValue]
         public static IDisposable Scope(IScope outer, out IScope scope)
         {
-            var subject = new DisposableSubject();
+            var subject = new ScopeSubject();
             outer.OnDispose(subject.Dispose);
             scope = subject;
             return subject;

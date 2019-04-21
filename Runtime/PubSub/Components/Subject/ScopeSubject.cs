@@ -7,13 +7,13 @@ using Utility.AssertN;
 
 namespace Lib.DataFlow
 {
-    internal class DisposableSubject : IDisposable, IScope
+    internal class ScopeSubject : IDisposable, IScope
     {
         Stack<Action> _stack;
         bool _disposed;
-        public static Pool<DisposableSubject> Pool { get; } = new Pool<DisposableSubject>(() => new DisposableSubject(), subs => subs.Reset());
+        public static Pool<ScopeSubject> Pool { get; } = new Pool<ScopeSubject>(() => new ScopeSubject(), subs => subs.Reset());
 
-        public DisposableSubject()
+        public ScopeSubject()
         {
             _stack = new Stack<Action>();
             _disposed = false;
