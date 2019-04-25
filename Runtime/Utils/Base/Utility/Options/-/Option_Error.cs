@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace Lib.Utility
 {
+#if M_OPTION_ERR
     public struct Option<T, TException> : IEquatable<Option<T, TException>>, IComparable<Option<T, TException>>
     {
         readonly bool _hasValue;
@@ -309,4 +310,5 @@ namespace Lib.Utility
             return _hasValue && _value == null ? Option.None<T, TException>(exceptionFactory()) : this;
         }
     }
+#endif
 }

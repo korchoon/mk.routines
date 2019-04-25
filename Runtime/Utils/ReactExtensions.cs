@@ -22,7 +22,7 @@ namespace Lib
         [MustUseReturnValue]
         public static IScope AddPure(this IScope a, IScope b)
         {
-            var res = new ScopeSubject();
+            var res = new ScopeStack();
             a.OnDispose(res.Dispose);
             b.OnDispose(res.Dispose);
             return res;

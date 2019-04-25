@@ -29,8 +29,10 @@ namespace Lib.Utility
         public static Option<T> Some<T>(this T value) => new Option<T>(value, true);
         public static Option<T> None<T>() => new Option<T>(default, false);
 
+#if M_OPTION_ERR
         public static Option<T, TException> Some<T, TException>(T value) => new Option<T, TException>(value, default, true);
         public static Option<T, TException> None<T, TException>(TException exception) => new Option<T, TException>(default, exception, false);
+#endif
 
         public static bool LastMaybe<T>(this IEnumerable<T> i, out T value)
         {

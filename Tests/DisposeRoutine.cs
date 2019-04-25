@@ -40,6 +40,7 @@ namespace Game.Tests
         [Test]
         public void DisposeTest()
         {
+#if M_REFACTOR
             using (React.Scope(out var scope))
             {
                 var ctx = new Ctx(out var timer, scope);
@@ -47,21 +48,22 @@ namespace Game.Tests
                 var task = ctx.Add(AsyncRoot(ctx));
                 var stopwatch = new Stopwatch();
                 stopwatch.Start();
-                while (!task.IsCompleted)
+                while (!task._isCompleted)
                 {
                     timer.Next();
                     if (stopwatch.Elapsed.TotalSeconds > 5)
                         throw new TooSlowException();
                 }
 
-                Assert.IsTrue(task.IsCompleted);
+                Assert.IsTrue(task._isCompleted);
                 Assert.IsTrue(ctx.Checkpoint.VisitedAllExcept(out var err, Check.DENY_ContinueBreakable, Check.DENY_ContinueSubTask2), err);
                 Assert.IsTrue(ctx.Checkpoint.Count(Check.BeforYieldSubTask3) > ctx.Checkpoint.Count(Check.AfterYieldSubTask3));
                 foreach (var routine in ctx._SubRoutines)
                 {
-                    Assert.IsTrue(routine.IsCompleted);
+                    Assert.IsTrue(routine._isCompleted);
                 }
             }
+#endif
         }
 
 
@@ -141,7 +143,7 @@ namespace Game.Tests
                 while (true)
                 {
                     ctx.Checkpoint.Visit(Check.BeforYieldSubTask3);
-                    await GetAwaiters.Delay(0.3f, ctx.Scheduler);
+                    await GetAwaiters.DelayEditor(0.5f, ctx.Scheduler);
                     ctx.Checkpoint.Visit(Check.AfterYieldSubTask3);
                 }
             }

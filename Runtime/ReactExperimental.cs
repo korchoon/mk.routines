@@ -2,6 +2,8 @@ using System;
 using JetBrains.Annotations;
 using Lib.Async;
 using Lib.DataFlow;
+using Lib.Timers;
+using UnityEngine.Events;
 
 namespace Lib
 {
@@ -9,7 +11,8 @@ namespace Lib
     {
         public static void DelayedAction(this float sec, Action continuation, IScope scope)
         {
-            sec.GetAwaiter().AwaitableTask.Scope(scope).OnDispose(continuation);
+            var scopeAwaiter = sec.GetAwaiter();
+            scopeAwaiter.UnsafeOnCompleted(continuation);
         }
 
         public static Func<ISub<T>> ToSub<T>(this Func<Routine<T>> callback, IScope scope)
@@ -18,10 +21,15 @@ namespace Lib
 
             ISub<T> DynamicMethod()
             {
-                var (p, s) = React.Channel<T>(scope);
                 var routine = callback.Invoke();
-                var awaiter = routine.GetAwaiter();
-                awaiter.OnCompleted(() => p.Next(awaiter.GetResult()));
+                var (p, s) = React.Channel<T>(scope);
+
+                var aw = routine.GetAwaiter();
+                routine.Scope.OnDispose(() =>
+                {
+                    var r = aw.GetResult();
+                    p.Next(r);
+                });
                 return s;
             }
         }
@@ -29,7 +37,7 @@ namespace Lib
         [MustUseReturnValue]
         public static (IDisposable disposable, IScope scope) ScopeTuple()
         {
-            var res = new ScopeSubject();
+            var res = new ScopeStack();
             return (res, res);
         }
 
@@ -68,7 +76,7 @@ namespace Lib
         [MustUseReturnValue]
         public static IDisposeWith<Exception> ErrScope(out IScope<Exception> scope)
         {
-            return new CatchSubject(out scope);
+            return new CatchStack(out scope);
         }
 
         public static ISub<T> ToSub<T>(Func<IPub<T>, Routine> ctor, IScope scope)

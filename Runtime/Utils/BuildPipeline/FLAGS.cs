@@ -68,7 +68,7 @@ namespace Utility
     {
         public const string FALSE = "false";
         public const string DEBUG = "DEBUG";
-        public const string DEBUG_TRACE_LOG = "DEBUG_TRACE_LOG";
+        public const string DEBUG_TRACE = "DEBUG_TRACE";
         public const string UNITY_EDITOR = "UNITY_EDITOR";
         public const string NON_EDITOR = "NON_EDITOR";
     }

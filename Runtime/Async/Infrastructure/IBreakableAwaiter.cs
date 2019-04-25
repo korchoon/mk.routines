@@ -1,7 +1,9 @@
-﻿namespace Lib.Async
+﻿using System;
+
+namespace Lib.Async
 {
     public interface IBreakableAwaiter
     {
-        void Break();
+        void Break(Exception e);
     }
 }

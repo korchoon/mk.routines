@@ -12,32 +12,35 @@ namespace Lib.Async
     public class SubAwaiter : ICriticalNotifyCompletion, IBreakableAwaiter
     {
         Action _continuation;
-        bool _stopRequested;
+        Option<Exception> _exception;
 
         public SubAwaiter()
         {
             _continuation = Empty.Action();
         }
 
-        public bool IsCompleted { get; private set; }
+        [UsedImplicitly] public bool IsCompleted { get; private set; }
 
+        [UsedImplicitly]
         public void GetResult()
         {
-            if (_stopRequested) throw RoutineStoppedException.Empty;
+            if (_exception.TryGet(out var err)) throw err;
         }
 
+        [UsedImplicitly]
         public void UnsafeOnCompleted(Action moveNext)
         {
             if (IsCompleted)
             {
-                moveNext(); // todo
+                moveNext.Invoke(); // todo
                 return;
             }
 
-            _continuation = moveNext;
+            _continuation += moveNext;
         }
 
 
+        [UsedImplicitly]
         void INotifyCompletion.OnCompleted(Action continuation) => UnsafeOnCompleted(continuation);
 
         internal bool OneOff()
@@ -46,30 +49,28 @@ namespace Lib.Async
             return false;
         }
 
-        public void Break()
+        public void Break(Exception e)
         {
-            _stopRequested = true;
+            if (_exception.HasValue) return;
+
+            _exception = e;
             Dispose();
         }
 
-        internal void Dispose()
+        void Dispose()
         {
-            if (IsCompleted) return;
-
             IsCompleted = true;
-            var m = _continuation ?? Empty.Action();
-            _continuation = Empty.Action();
-            m();
+            RoutineUtils.MoveNextAndClear(ref _continuation);
         }
     }
 
-    public class SingleAwaiter<T> : ICriticalNotifyCompletion, IBreakableAwaiter
+    public class SubAwaiter<T> : ICriticalNotifyCompletion, IBreakableAwaiter
     {
-        bool _stopRequested;
         Option<T> _result;
         Action _continuation;
+        Option<Exception> _exception;
 
-        public SingleAwaiter(ISub<T> ex)
+        public SubAwaiter(ISub<T> ex)
         {
             ex.OnNext(OneOff);
 
@@ -84,7 +85,7 @@ namespace Lib.Async
         [UsedImplicitly]
         public T GetResult()
         {
-            if (_stopRequested) throw RoutineStoppedException.Empty;
+            if (_exception.TryGet(out var e)) throw e;
 
             if (!_result.TryGet(out var res))
                 Asr.Fail("Tried to break & get result of Routine<T>");
@@ -94,33 +95,33 @@ namespace Lib.Async
 
         [UsedImplicitly] public bool IsCompleted { get; private set; }
 
+        [UsedImplicitly]
         public void OnCompleted(Action continuation) => UnsafeOnCompleted(continuation);
 
+        [UsedImplicitly]
         public void UnsafeOnCompleted(Action moveNext)
         {
             if (IsCompleted)
             {
-                moveNext(); // todo
+                moveNext.Invoke(); // todo
                 return;
             }
 
-            _continuation = moveNext;
+            _continuation += moveNext;
         }
 
-        public void Break()
+        public void Break(Exception e)
         {
-            _stopRequested = true;
+            if (_exception.HasValue) return;
+
+            _exception = e;
             Dispose();
         }
 
         void Dispose()
         {
-            if (IsCompleted) return;
-
             IsCompleted = true;
-            var m = _continuation ?? Empty.Action();
-            _continuation = Empty.Action();
-            m();
+            RoutineUtils.MoveNextAndClear(ref _continuation);
         }
     }
 }

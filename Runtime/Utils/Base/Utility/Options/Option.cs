@@ -8,7 +8,7 @@ using Utility.AssertN;
 namespace Lib.Utility
 {
     [Serializable,]
-    public struct Option<T> : IEquatable<Option<T>>, IComparable<Option<T>>, IOption
+    public struct Option<T> : IEquatable<Option<T>>, IComparable<Option<T>>, IOption, IOption<T>
     {
         // ReSharper disable once StaticMemberInGenericType
         public static readonly bool IsValueType;
@@ -21,10 +21,16 @@ namespace Lib.Utility
 
         public static implicit operator Option<T>(T arg)
         {
-            if (IsValueType)
-                return arg.Some();
+            if (!IsValueType) return ReferenceEquals(arg, null) ? new Option<T>() : arg.Some();
 
-            return ReferenceEquals(arg, null) ? new Option<T>() : arg.Some();
+#if M_WARN
+            if (arg.Equals(default(T)))
+            {
+                Warn.Warning($"{arg} has default value");
+            }
+#endif
+            
+            return arg.Some();
         }
 
         static Option()
