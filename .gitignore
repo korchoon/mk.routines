@@ -1,0 +1,17 @@
+/memorycaptures
+/library
+/temp
+/obj
+/build
+/builds
+/.idea
+/logs
+
+*.dotsettings
+*.csproj
+*.sln
+*.suo
+*.user
+*.vs
+
+.gradle/
