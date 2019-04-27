@@ -73,7 +73,7 @@ namespace Lib.Async
             
             if (awaiter is IBreakableAwaiter breakableAwaiter)
             {
-//                _RoutineBuilder.Next(d => d.CurrentAwait, StackTraceHolder.New(3), this);
+                _RoutineBuilder.Next(d => d.CurrentAwait, StackTraceHolder.New(3), this);
                 _innerAwaiter = breakableAwaiter;
                 TryInit();
             }
