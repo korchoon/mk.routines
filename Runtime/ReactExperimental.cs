@@ -10,6 +10,22 @@ namespace Lib
 {
     public static class ReactExperimental
     {
+        public ISub Every(float sec, IScope scope)
+        {
+            var (pub, sub) = React.Channel(scope);
+            _Inner().Scope(scope);
+            return sub;
+
+            async Routine _Inner()
+            {
+                while (true)
+                {
+                    pub.Next();
+                    await sec;
+                }
+            }
+        }
+        
         public static void DelayedAction(this float sec, Action continuation, IScope scope)
         {
             var scopeAwaiter = sec.GetAwaiter();
