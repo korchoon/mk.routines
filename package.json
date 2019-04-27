@@ -1,0 +1,11 @@
+{
+  "name": "com.hpg.reactors",
+  "displayName": "Async Reactors",
+  "version": "0.1.0",
+  "unity": "2018.3",
+  "description": "Custom async task flow (disposable, without implicit schedulers), IScope (inverse of IDisposable). Pub/sub with async integration",
+  "keywords": [
+    "async",
+    "events"
+  ]
+}

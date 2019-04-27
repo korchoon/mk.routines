@@ -1,0 +1,16 @@
+{
+    "name": "Lib.Reactors.Editor",
+    "references": [
+        "Lib.Reactors"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}
