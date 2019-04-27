@@ -10,7 +10,7 @@ namespace Lib
 {
     public static class ReactExperimental
     {
-        public ISub Every(float sec, IScope scope)
+        public static ISub Every(float sec, IScope scope)
         {
             var (pub, sub) = React.Channel(scope);
             _Inner().Scope(scope);
