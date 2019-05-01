@@ -10,22 +10,28 @@ namespace Lib
 {
     public static class ReactExperimental
     {
-        public static ISub Every(float sec, IScope scope)
+        public static CachedSubject<T> FromEventCached<T>(Action<Action<T>> sub, Action<Action<T>> unsub, IScope scope)
         {
-            var (pub, sub) = React.Channel(scope);
-            _Inner().Scope(scope);
-            return sub;
+            var s = new CachedSubject<T>(scope);
+            sub.Invoke(Action);
+            scope.OnDispose(() => unsub.Invoke(Action));
 
-            async Routine _Inner()
-            {
-                while (true)
-                {
-                    pub.Next();
-                    await sec;
-                }
-            }
+            return s;
+
+            void Action(T msg) => s.Next(msg);
         }
-        
+
+        public static ISub<T> FromEvent<T>(Action<Action<T>> sub, Action<Action<T>> unsub, IScope scope)
+        {
+            var (pub, res) = React.Channel<T>(scope);
+            sub.Invoke(Action);
+            scope.OnDispose(() => unsub.Invoke(Action));
+
+            return res;
+
+            void Action(T msg) => pub.Next(msg);
+        }
+
         public static void DelayedAction(this float sec, Action continuation, IScope scope)
         {
             var scopeAwaiter = sec.GetAwaiter();

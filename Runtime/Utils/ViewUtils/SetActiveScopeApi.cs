@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Lib.Async;
 using Lib.Attributes;
 using Lib.DataFlow;
 using Lib.Utility;
@@ -11,6 +12,23 @@ using Utility.AssertN;
 
 namespace Lib
 {
+    public static class AnimatorApi
+    {
+        public static IScope PlayScope(this Animator animator, string state, float time, IScope scope)
+        {
+            return Inner().Scope(scope);
+
+            async Routine Inner()
+            {
+                using (animator.ActivateComponentScope())
+                {
+                    animator.Play(state, 0);
+                    await time;
+                }
+            }
+        }
+    }
+
     [NonPerformant(PerfKind.GC)]
     public static class SetActiveScopeApi
     {
@@ -35,7 +53,7 @@ namespace Lib
         {
             ActivateScope(gameObject).DisposeOn(scope);
         }
-        
+
         [MustUseReturnValue]
         public static IDisposable ActivateScope(this GameObject gameObject)
         {
@@ -46,11 +64,17 @@ namespace Lib
             return new ActionOnDispose(() => gameObject.SetActive(false));
         }
 
+
+        public static void ActivateComponentScope(this Behaviour comp, IScope scope)
+        {
+            ActivateComponentScope(comp).DisposeOn(scope);
+        }
+
         public static IDisposable ActivateComponentScope(this Behaviour comp)
         {
 //            Assert.IsNotNull(comp);
             comp.enabled = true;
-//            Assert.IsTrue(comp.gameObject.activeInHierarchy && comp.enabled);
+            Assert.IsTrue(comp.gameObject.activeInHierarchy && comp.enabled, $"{Path(comp.gameObject)} - should be Active after SetActive(true)");
             return new ActionOnDispose(() => comp.enabled = false);
         }
 
@@ -78,11 +102,12 @@ namespace Lib
         }
 
         #region GameObject[]
+
         public static void ActivateScope(this GameObject[] gameObject, IScope scope)
         {
             gameObject.ActivateScope().DisposeOn(scope);
         }
-        
+
         public static IDisposable ActivateScope(this GameObject[] gameObject)
         {
             Assert.IsNotNull(gameObject);

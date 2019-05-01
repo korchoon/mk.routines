@@ -47,8 +47,6 @@ namespace Lib.Async
 
 #endif
 
-        [Obsolete("Use instead Sch.AppScope")] public static IScope Scope => Sch.Scope;
-
         static ScheduleRunner _instance;
         IPub _update;
         IPub _fixedUpdate;
@@ -85,6 +83,7 @@ namespace Lib.Async
         {
             Asr.IsTrue(_instance == this);
 
+            Application.wantsToQuit += () => WantsQuit = true;
             _dispose = React.Scope(out var scope);
             Sch.Scope = scope;
             _complete = new CompleteToken();

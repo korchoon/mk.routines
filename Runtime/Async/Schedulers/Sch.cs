@@ -19,6 +19,8 @@ namespace Lib.Async
 
         #endregion
 
+        public static bool QuittingApp => ScheduleRunner.WantsQuit;
+
         public static bool TryInit(Option<ScheduleSettings> settings = default) => ScheduleRunner.TryInit(settings);
 
         public static ISub LateUpdate { get; internal set; }

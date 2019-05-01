@@ -2,13 +2,12 @@ using System.Collections.Generic;
 using Lib.DataFlow;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using Sirenix.Utilities;
+using Sirenix.Utilities.Editor;
 using UnityEditor;
 
 namespace Lib.Async
 {
-#if ODIN_INSPECTOR
-     using Sirenix.Utilities;
-    using Sirenix.Utilities.Editor;
     public class ScopeTracker : OdinEditorWindow
     {
         [MenuItem("Tools/Scopes")]
@@ -50,5 +49,4 @@ namespace Lib.Async
             public List<StackTraceHolder> List = new List<StackTraceHolder>();
         }
     }
-#endif
 }

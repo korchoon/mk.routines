@@ -1,19 +1,28 @@
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using Lib.Async;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using Sirenix.Utilities;
+using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
 
 namespace Lib.DataFlow
 {
-#if ODIN_INSPECTOR
-using Sirenix.Utilities;
-using Sirenix.Utilities.Editor;
+    public static class DictUtils
+    {
+        public static bool TryAdd<TKey, TValue>(this Dictionary<TKey, TValue> d, TKey key, TValue value)
+        {
+            if (d.ContainsKey(key))
+                return false;
 
-     public class RoutineTracker : OdinEditorWindow
+            d.Add(key, value);
+            return true;
+        }
+    }
+
+    public class RoutineTracker : OdinEditorWindow
     {
         [MenuItem("Tools/Routine")]
         static void OpenWindow()
@@ -36,9 +45,9 @@ using Sirenix.Utilities.Editor;
             _scopes = new Dictionary<long, Scope>();
             _builders = new SortableEdList<Builder>((a, b) => b.CtorTrace.Name.Length - a.CtorTrace.Name.Length);
 
-            _Routine.OnNew += OnRoutine;
+            Routine._Routine.OnNew += OnRoutine;
             _RoutineBuilder.OnNew += OnBuilder;
-            _Routine_Awaiter.OnNew += OnAwaiter;
+            Routine._Routine_Awaiter.OnNew += OnAwaiter;
             _Scope.OnNew += OnScope;
         }
 
@@ -51,7 +60,7 @@ using Sirenix.Utilities.Editor;
             t.OnDispose += i => sc.List.Add(i);
         }
 
-        void OnRoutine(_Routine evt)
+        void OnRoutine(Routine._Routine evt)
         {
             var r = new RoutineEd {RefId = evt.Id};
             _routines.TryAdd(r.RefId, r);
@@ -59,12 +68,12 @@ using Sirenix.Utilities.Editor;
             InitializeRoutine(t: r, evt: evt);
         }
 
-        void InitializeRoutine(RoutineEd t, _Routine evt)
+        void InitializeRoutine(RoutineEd t, Routine._Routine evt)
         {
             t.RefId = evt.Id;
             evt.GetAwaiter += awaiter =>
             {
-                if (!_Routine_Awaiter.TryLocate(awaiter, out var located))
+                if (!Routine._Routine_Awaiter.TryLocate(awaiter, out var located))
                     return;
 
                 _awaiters.TryGetValue(located.Id, out var ed);
@@ -106,7 +115,7 @@ using Sirenix.Utilities.Editor;
 #endif
         }
 
-        void OnAwaiter(_Routine_Awaiter evt)
+        void OnAwaiter(Routine._Routine_Awaiter evt)
         {
             var aw = new Awaiter() {RefId = evt.Id};
             _awaiters.TryAdd(aw.RefId, aw);
@@ -158,5 +167,4 @@ using Sirenix.Utilities.Editor;
             public List<StackTraceHolder> List = new List<StackTraceHolder>();
         }
     }
-#endif
 }

@@ -22,5 +22,4 @@ namespace Lib.DataFlow
             _sort = () => All.Sort(comparison);
         }
     }
-
 }

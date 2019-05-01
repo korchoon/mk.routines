@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Sirenix.Utilities;
 
 namespace Lib.DataFlow
 {
@@ -13,7 +14,7 @@ namespace Lib.DataFlow
         public static bool NullOrEmpty(this string s) => string.IsNullOrEmpty(s);
 
         public static IEnumerable<StackFrame> GetFrames(this StackTrace tr, int skip)
-        {    
+        {
             var fs = tr.GetFrames();
             for (var index = skip; index < fs.Length; index++)
                 yield return fs[index];
@@ -35,8 +36,6 @@ namespace Lib.DataFlow
         {
             return trace.Where(fr => !(fr.GetFileName()?.Contains("packages", StringComparison.OrdinalIgnoreCase) ?? true));
         }
-
-        static bool Contains(this string source, string toCheck, StringComparison comparisonType) => source.IndexOf(toCheck, comparisonType) >= 0;
 
         public static IEnumerable<StackFrame> SkipWhilePath(this StackTrace trace, string path)
         {

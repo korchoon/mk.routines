@@ -27,7 +27,7 @@ namespace Lib
         }
         
         [MustUseReturnValue]
-        public static IDisposable Scope(IScope outer, out IScope scope)
+        public static IDisposable Scope( out IScope scope, IScope outer)
         {
             var subject = new ScopeStack();
             outer.OnDispose(subject.Dispose);
