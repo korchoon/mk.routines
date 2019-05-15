@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "com.hpg.reactors":"file:/com.hpg.reactors",
+    "com.hpg.reactors": "file:/com.hpg.reactors",
     "com.unity.package-manager-ui": "2.1.2",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.animation": "1.0.0",
