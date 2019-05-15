@@ -9,6 +9,15 @@ namespace Utility
     public static class Dbg
     {
         [Conditional(FLAGS.DEBUG)]
+        public static void LogLine()
+        {
+            var fr = new StackTrace(1, true).GetFrame(0);
+            var filename = Path.GetFileNameWithoutExtension(fr.GetFileName());
+
+            Debug.Log($"{filename}.{fr.GetMethod().Name} : {fr.GetFileLineNumber()}");
+        }
+        
+        [Conditional(FLAGS.DEBUG)]
         public static void LogLine<T>(Option<T> opt = default)
         {
             var fr = new StackTrace(1, true).GetFrame(0);

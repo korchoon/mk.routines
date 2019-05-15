@@ -32,12 +32,12 @@ namespace Lib.Async
             _all.All.Add(sc);
 
             t.CtorStackTrace += msg => sc.Ctor = msg;
-            t.AfterDispose += () =>
+            t.Dispose += () =>
             {
                 sc.Disposed = true;
                 _all.All.Remove(sc);
             };
-            t.OnDispose += i => sc.List.Add(i);
+            t.Finally += msg => sc.List.Add(msg);
         }
 
 

@@ -55,24 +55,37 @@ namespace Lib.Async
             where TAwaiter : INotifyCompletion
             where TStateMachine : IAsyncStateMachine
         {
-            awaiter.OnCompleted(_continuation);
-
-            if (awaiter is IBreakableAwaiter breakableAwaiter)
+            switch (awaiter)
             {
-                _RoutineBuilder.Next(d => d.CurrentAwait, StackTraceHolder.New(3), this);
-                _innerAwaiter = breakableAwaiter;
-                TryInit();
+                case IBreakableAwaiter breakableAwaiter:
+                    awaiter.OnCompleted(_continuation);
+                    _RoutineBuilder.Next(d => d.CurrentAwait, StackTraceHolder.New(3), this);
+                    _innerAwaiter = breakableAwaiter;
+                    ReorderBreak();
+                    break;
+                case SelfScopeAwaiter selfScopeAwaiter:
+                    selfScopeAwaiter.Value = Task.Scope;
+                    Asr.IsNotNull(Task.Scope);
+                    awaiter.OnCompleted(_continuation);
+                    break;
+                case SelfDisposeAwaiter selfDisposeAwaiter:
+                    selfDisposeAwaiter.Value = Task._dispose;
+                    Asr.IsNotNull(Task._dispose);
+                    awaiter.OnCompleted(_continuation);
+                    break;
+                default:
+                    Asr.Fail("passed unbreakable awaiter");
+                    break;
             }
-            else
-                Asr.Fail("passed unbreakable awaiter");
         }
 
 
-        void TryInit()
+        void ReorderBreak()
         {
             if (_cached == null)
-                _cached = () => this._innerAwaiter?.Break(RoutineStoppedException.Empty);
+                _cached = () => _innerAwaiter?.Break(RoutineStoppedException.Empty);
 
+            Task.Scope.Unsubscribe(_cached);
             Task.Scope.OnDispose(_cached);
         }
 

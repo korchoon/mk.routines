@@ -1,12 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using Utility.AssertN;
 
 namespace Lib
 {
     public static class ScriptingDefineUtil
     {
+        public static string Current()
+        {
+            var currentTarget = EditorUserBuildSettings.selectedBuildTargetGroup;
+            return PlayerSettings.GetScriptingDefineSymbolsForGroup(currentTarget);
+        }
+        
         public static bool IsNullOrWhitespace(this string s) => string.IsNullOrWhiteSpace(s);
         
         static StringComparer _comparer = StringComparer.Ordinal;

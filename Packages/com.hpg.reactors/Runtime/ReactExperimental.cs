@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using JetBrains.Annotations;
 using Lib.Async;
 using Lib.DataFlow;
@@ -10,13 +11,37 @@ namespace Lib
 {
     public static class ReactExperimental
     {
+
+
+        public static CachedSubject<T> FromEventCached<T>(Action<Action<T>> sub, Action<Action<T>> unsub, IScope scope)
+        {
+            var s = new CachedSubject<T>(scope);
+            sub.Invoke(Action);
+            scope.OnDispose(() => unsub.Invoke(Action));
+
+            return s;
+
+            void Action(T msg) => s.Next(msg);
+        }
+
+        public static ISub<T> FromEvent<T>(Action<Action<T>> sub, Action<Action<T>> unsub, IScope scope)
+        {
+            var (pub, res) = React.Channel<T>(scope);
+            sub.Invoke(Action);
+            scope.OnDispose(() => unsub.Invoke(Action));
+
+            return res;
+
+            void Action(T msg) => pub.Next(msg);
+        }
+
         public static void DelayedAction(this float sec, Action continuation, IScope scope)
         {
             var scopeAwaiter = sec.GetAwaiter();
             scopeAwaiter.UnsafeOnCompleted(continuation);
         }
 
-        public static Func<ISub<T>> ToSub<T>(this Func<Routine<T>> callback, IScope scope)
+        public static Func<ISub<T>> FromRoutine<T>(this Func<Routine<T>> callback, IScope scope)
         {
             return DynamicMethod;
 
@@ -50,14 +75,17 @@ namespace Lib
             return (res, res);
         }
 
-        public static IPub DelegateToPub(this Action t, IScope sd)
+        public static void FromAction(out IPub pub, Action t, IScope sd) => pub = FromAction(t, sd);
+        public static void FromAction<T>(out IPub<T> pub, Action<T> t, IScope sd) => pub = FromAction(t, sd);
+
+        public static IPub FromAction(this Action t, IScope sd)
         {
             var (pub1, sub1) = React.Channel(sd);
             sub1.OnNext(t.Invoke, sd);
             return pub1;
         }
 
-        public static IPub<T> DelegateToPub<T>(this Action<T> t, IScope sd)
+        public static IPub<T> FromAction<T>(this Action<T> t, IScope sd)
         {
             var (pub1, sub1) = React.Channel<T>(sd);
             sub1.OnNext(t.Invoke, sd);
@@ -117,6 +145,26 @@ namespace Lib
                     pub.Next();
                 }
             }
+        }
+
+        public static void Every(float timeout, Action action, IScope scope)
+        {
+            Inner().DisposeOn(scope);
+
+            async Routine Inner()
+            {
+                while (true)
+                {
+                    await timeout;
+                    action();
+                }
+            }
+        }
+
+        public static T1 DisposeOn<T1>(this T1 dispose, IScope scope) where T1 : IDisposable
+        {
+            scope.OnDispose(dispose.Dispose);
+            return dispose;
         }
     }
 }

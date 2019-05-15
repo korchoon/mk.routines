@@ -34,7 +34,7 @@ namespace Game.Tests
                     TestUtils.Track(ref evt.Inner2, ref assert3);
                     TestUtils.Track(ref evt.InnerInner1, ref assert3);
                     TestUtils.Track(ref evt.InnerInner2, ref assert3);
-                    TestUtils.Track(ref evt.OuterBool, ref assert3, new[] {true.Some()});
+                    TestUtils.Track(ref evt.OuterBool, ref assert3, new[] {Option.Some(true)});
                 };
 
 

@@ -11,6 +11,9 @@ namespace Lib.Async
     public abstract class DebugTracer<TEvents, TTarget> where TEvents : DebugTracer<TEvents, TTarget>, new() where TTarget : class
     {
         public long Id;
+
+        public Action OnDeregister;
+
         public static Action<TEvents> OnNew;
         public static long LastId { get; private set; }
 
@@ -25,13 +28,13 @@ namespace Lib.Async
             _generator = new ObjectIDGenerator();
             LastId = 0;
         }
-        
+
 
         [Conditional(FLAGS.DEBUG_TRACE)]
         public static void Register(TTarget target) // scope
         {
             var id = _generator.GetId(target, out var firstTime);
-            
+
             var events = new TEvents {Id = id};
             if (firstTime)
             {
@@ -51,6 +54,11 @@ namespace Lib.Async
         {
             var hash = _generator.GetId(target, out var firstTime);
             Asr.IsFalse(firstTime);
+            if (_eventRegistry.TryGetValue(hash, out var t))
+                t.OnDeregister?.Invoke();
+            else
+                Asr.Fail("No such key");
+            
             _eventRegistry.Remove(hash);
         }
 
@@ -60,7 +68,7 @@ namespace Lib.Async
             Asr.IsFalse(firstTime);
             return _eventRegistry.TryGetValue(id, out value);
         }
-        
+
         static TEvents Locate(TTarget o)
         {
             var id = _generator.HasId(o, out var firstTime);

@@ -11,17 +11,10 @@ using Debug = UnityEngine.Debug;
 
 namespace Lib.Async
 {
-#if UNITY_EDITOR
-    using UnityEditor;
-
-#endif
-
     [Serializable]
     public class ScheduleSettings
     {
         public float Logic = 0.1f;
-//            public float Net = 0.05f;
-
         static float Physics
         {
             get => Time.fixedDeltaTime;
@@ -32,45 +25,24 @@ namespace Lib.Async
 
     internal class ScheduleRunner : MonoBehaviour
     {
-#if UNITY_EDITOR
-        [CustomEditor(typeof(ScheduleRunner))]
-        class Ed : Editor
-        {
-            void OnSceneGUI()
-            {
-                var runner = (ScheduleRunner) target;
-                Handles.BeginGUI();
-                runner._handles.Next();
-                Handles.EndGUI();
-            }
-        }
-
-#endif
-
-        [Obsolete("Use instead Sch.AppScope")] public static IScope Scope => Sch.Scope;
-
         static ScheduleRunner _instance;
         IPub _update;
         IPub _fixedUpdate;
-        CompleteToken _complete;
+        bool _completed;
         IDisposable _dispose;
         IPub<float> _fixedUpdateTime;
         IPub<float> _updateTime;
         IPub _lateUpdate;
-        IPub _gizmos;
-        IPub _handles;
 
 
-//        [Obsolete("Use instead Sch.TryInit()")]
         internal static bool TryInit(Option<ScheduleSettings> settings = default)
         {
             if (_instance) return false;
 
-            Application.quitting += Dispose;
+            Application.quitting += _Dispose;
 
             var go = new GameObject
             {
-//                hideFlags = HideFlags.HideAndDontSave,
                 name = "Schedulers"
             };
             _instance = go.AddComponent<ScheduleRunner>();
@@ -87,7 +59,7 @@ namespace Lib.Async
 
             _dispose = React.Scope(out var scope);
             Sch.Scope = scope;
-            _complete = new CompleteToken();
+            _completed = false;
 
             Sch.Logic = StartSch("Logic", scheduleSettings.Logic, scope);
 //            Sch.Net = StartSch("Net", settings.Net);
@@ -99,32 +71,8 @@ namespace Lib.Async
             Sch.Physics = StartSch("Physics", out _fixedUpdate, scope);
             Sch.PhysicsTime = StartSchTime("PhysicsTime", out _fixedUpdateTime, scope);
             (SchPub.PubError, Sch.OnError) = React.Channel<Exception>(Sch.Scope);
-
-            Init_Editor(scope);
-            Init_Player(scope);
         }
 
-        [Conditional(FLAGS.NON_EDITOR)]
-        void Init_Player(IScope _)
-        {
-            EdSch.Gizmos = Empty.Sub();
-            _gizmos = Empty.Pub();
-
-            EdSch.Handles = Empty.Sub();
-            _handles = Empty.Pub();
-        }
-
-        [Conditional(FLAGS.UNITY_EDITOR)]
-        void Init_Editor(IScope scope)
-        {
-            // runtime
-            EdSch.Handles = StartSch("Handles", out _handles, scope);
-            EdSch.Gizmos = StartSch("Gizmos", out _gizmos, scope);
-        }
-
-        public static bool WantsQuit { get; private set; }
-
-        void OnDrawGizmos() => _gizmos.Next();
 
         void Update()
         {
@@ -143,13 +91,13 @@ namespace Lib.Async
             _fixedUpdate.Next();
         }
 
-        SchBase<float> StartSchTime(string nam, out IPub<float> pub, IScope scope)
+        static SchBase<float> StartSchTime(string nam, out IPub<float> pub, IScope scope)
         {
             var res = new SchBase<float>(nam, out pub, scope);
             return res;
         }
 
-        SchBase StartSch(string nam, out IPub pub, IScope scope)
+        static SchBase StartSch(string nam, out IPub pub, IScope scope)
         {
             var res = new SchBase(nam, out pub, scope);
             return res;
@@ -173,15 +121,13 @@ namespace Lib.Async
             }
         }
 
-        static void Dispose()
+        static void _Dispose()
         {
-            if (_instance._complete.Set()) return;
+            if (_instance._completed.WasTrue()) return;
 
             _instance.StopAllCoroutines();
-
-#if !BUG_INF_LOOP_FIXED
             _instance._dispose.Dispose();
-#endif
+
             Destroy(_instance.gameObject);
             _instance = null;
         }

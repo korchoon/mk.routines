@@ -26,7 +26,7 @@ namespace Lib.Utility
             return true;
         }
 
-        public static Option<T> Some<T>(this T value) => new Option<T>(value, true);
+        public static Option<T> Some<T>(T value) => new Option<T>(value, true);
         public static Option<T> None<T>() => new Option<T>(default, false);
 
 #if M_OPTION_ERR
@@ -55,7 +55,7 @@ namespace Lib.Utility
         }
 
 
-        static bool IsNull<T>(this T t)
+        static bool IsNull<T>(T t)
         {
             return !Option<T>.IsValueType && t == null;
         }
@@ -97,7 +97,7 @@ namespace Lib.Utility
         }
 
 
-        public static bool IsNotNull<T>(this T t)
+        public static bool IsNotNull<T>(T t)
         {
             return Option<T>.IsValueType || t != null;
         }

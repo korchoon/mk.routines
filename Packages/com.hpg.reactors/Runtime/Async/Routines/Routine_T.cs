@@ -35,7 +35,7 @@ namespace Lib.Async
             void _InnerDispose()
             {
                 _isCompleted = true;
-                Utils.MoveNextAndClear(ref _moveAllAwaiters);
+                RoutineUtils.MoveNextAndClear(ref _moveAllAwaiters);
                 _dispose.Dispose();
             }
         }
@@ -58,13 +58,13 @@ namespace Lib.Async
                 _awaitableTask = par;
                 _continuation = Empty.Action();
                 onErr.OnDispose(_DisposeWith);
-                onMoveNext += () => Utils.MoveNextAndClear(ref _continuation);
+                onMoveNext += () => RoutineUtils.MoveNextAndClear(ref _continuation);
             }
 
             void _DisposeWith(Exception err)
             {
                 _exception = err;
-                Utils.MoveNextAndClear(ref _continuation);
+                RoutineUtils.MoveNextAndClear(ref _continuation);
             }
 
             [UsedImplicitly] public bool IsCompleted => _awaitableTask._isCompleted;
@@ -98,7 +98,7 @@ namespace Lib.Async
 
                 _exception = e;
                 _awaitableTask.PubErr.DisposeWith(e);
-                Utils.MoveNextAndClear(ref _continuation);
+                RoutineUtils.MoveNextAndClear(ref _continuation);
             }
         }
     }

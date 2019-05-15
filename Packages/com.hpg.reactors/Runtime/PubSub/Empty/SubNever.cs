@@ -14,7 +14,7 @@ namespace Lib.DataFlow
         {
         }
 
-        public void OnNext(Action pub, IScope sd)
+        public void OnNext(Action pub, IScope scope)
         {
         }
     }
@@ -31,7 +31,7 @@ namespace Lib.DataFlow
         {
         }
 
-        public void OnNext(Action<T> pub, IScope sd)
+        public void OnNext(Action<T> pub, IScope scope)
         {
         }
     }

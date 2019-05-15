@@ -1,6 +1,9 @@
 using System;
+using System.Runtime.CompilerServices;
 using Lib.DataFlow;
 using Lib.Utility;
+
+[assembly: InternalsVisibleTo("Lib.Reactors.Editor")]
 
 namespace Lib.Async
 {
@@ -28,17 +31,5 @@ namespace Lib.Async
         public static ISub<float> PhysicsTime { get; internal set; }
 
         public static ISub Logic { get; internal set; }
-    }
-
-    public static class EdSch
-    {
-        public static IScope Scope => Sch.Scope;
-        public static ISub Update => Sch.Update;
-
-        public static bool IsGizmo { get; internal set; }
-
-
-        public static ISub Gizmos { get; internal set; }
-        public static ISub Handles { get; internal set; }
     }
 }

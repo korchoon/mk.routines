@@ -7,7 +7,7 @@ using Utility.AssertN;
 
 namespace Lib.Pooling
 {
-    public class Pool<T> : IDisposable
+    public class Pool<T> : IDisposable where T : class
     {
         Func<T> _ctor;
         readonly Stack<T> _stack;
@@ -48,16 +48,18 @@ namespace Lib.Pooling
 #endif
         }
 
-        public void Release(T element)
+        public void Release(ref T element)
         {
 #if !M_DISABLE_POOLING
             Asr.IsFalse(_stack.Count > 0 && ReferenceEquals(_stack.Peek(), element),
                 "Internal error. Trying to release object that is already released to pool. ");
 
             _debugPoolCounter.Release();
-            _reset(element);
+            _reset.Invoke(element);
             _stack.Push(element);
 #endif
+
+            element = null;
         }
 
 
@@ -70,6 +72,29 @@ namespace Lib.Pooling
                 _destroy.Invoke(t);
             }
 #endif
+        }
+
+        public _Scope Scoped(out T tmp)
+        {
+            tmp = Get();
+            return new _Scope(this, ref tmp);
+        }
+
+        public struct _Scope : IDisposable
+        {
+            Pool<T> _pool;
+            T _val;
+
+            internal _Scope(Pool<T> pool, ref T val)
+            {
+                _pool = pool;
+                _val = val;
+            }
+
+            public void Dispose()
+            {
+                _pool.Release(ref _val);
+            }
         }
     }
 }
