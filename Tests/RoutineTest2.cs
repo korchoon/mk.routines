@@ -36,7 +36,7 @@ namespace Game.Tests
                     TestUtils.Track(ref evt.Break2, ref assert3);
                     TestUtils.Track(ref evt.Break3, ref assert3);
                     TestUtils.Track(ref evt.Break4, ref assert3);
-                    TestUtils.Track(ref evt.BreakBool, ref assert3, new[] {true.Some()});
+                    TestUtils.Track(ref evt.BreakBool, ref assert3, new[] {Option.Some(true)});
                 };
 
 
@@ -119,7 +119,7 @@ namespace Game.Tests
                     TestUtils.Track(ref evt.Break2, ref assert1);
                     TestUtils.Track(ref evt.Break3, ref assert1);
                     TestUtils.Track(ref evt.Break4, ref assert1);
-                    TestUtils.Track(ref evt.BreakBool, ref assert1, new []{true.Some()});
+                    TestUtils.Track(ref evt.BreakBool, ref assert1, new []{Option.Some(true)});
                 };
 
 

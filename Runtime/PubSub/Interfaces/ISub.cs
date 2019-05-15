@@ -7,7 +7,7 @@ namespace Lib.DataFlow
         // todo rename to Subscribe
         void OnNext(Func<bool> pub);
         // todo rename to Subscribe
-        void OnNext(Action pub, IScope sd);
+        void OnNext(Action pub, IScope scope);
     }
 
     public interface ISub<out T>
@@ -15,6 +15,6 @@ namespace Lib.DataFlow
         // todo rename to Subscribe
         void OnNext(Func<T, bool> pub);
         // todo rename to Subscribe
-        void OnNext(Action<T> pub, IScope sd);
+        void OnNext(Action<T> pub, IScope scope);
     }
 }

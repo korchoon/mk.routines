@@ -10,7 +10,9 @@ namespace Lib.DataFlow
 
         public static Action Action() => ActionEmpty.Empty;
         public static Action<T> Action<T>() => ActionEmpty<T>.Empty;
-        public static Func<T> Func<T>(T val = default) => () => val;
+        public static Func<T> Func<T>() => FuncEmpty<T>.Empty;
+        public static Func<T, bool> FuncPredicate<T>() => FuncEmpty<T>.Empty_bool;
+        public static Func<bool> FuncPredicate() => FuncEmpty.Empty;
         public static void Func<T>(out Func<T> res, T val = default) => res = () => val;
 
         public static IScope Scope() => ScopeNever.Ever;

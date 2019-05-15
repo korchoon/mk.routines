@@ -15,5 +15,9 @@ namespace Lib.DataFlow
         public void OnDispose(Action dispose)
         {
         }
+
+        public void Unsubscribe(Action dispose)
+        {
+        }
     }
 }

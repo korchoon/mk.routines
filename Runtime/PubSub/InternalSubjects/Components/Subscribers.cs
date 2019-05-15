@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Game.Proto;
+using Lib.Async;
 using Lib.Attributes;
 using Lib.Utility;
 using Utility.AssertN;
@@ -12,13 +13,13 @@ namespace Lib.DataFlow
     {
         Queue<Func<bool>> _next;
         Queue<Func<bool>> _current;
-        CompleteToken _d;
+        bool _completed;
 
         public Subscribers()
         {
             _next = new Queue<Func<bool>>();
             _current = new Queue<Func<bool>>();
-            _d = new CompleteToken();
+            _completed = false;
         }
 
         void Swap()
@@ -30,7 +31,7 @@ namespace Lib.DataFlow
 
         public bool Next()
         {
-            if (_d) return false;
+            if (_completed) return false;
 
 #if !BUG_DOUBLE_SEND
             Asr.IsTrue(_current.Count == 0); 
@@ -64,7 +65,7 @@ namespace Lib.DataFlow
 
         public void Dispose()
         {
-            if (_d.Set()) return;
+            if (_completed.WasTrue()) return;
 
             Clear();
         }
@@ -78,7 +79,7 @@ namespace Lib.DataFlow
         public void Reset()
         {
             Clear();
-            _d = new CompleteToken();
+            _completed = false;
         }
     }
 
@@ -88,13 +89,13 @@ namespace Lib.DataFlow
     {
         Queue<Func<T, bool>> _next;
         Queue<Func<T, bool>> _current;
-        CompleteToken _d;
+        bool _completed;
 
         public Subscribers()
         {
             _next = new Queue<Func<T, bool>>();
             _current = new Queue<Func<T, bool>>();
-            _d = new CompleteToken();
+            _completed = false;
         }
 
         void Swap()
@@ -106,7 +107,7 @@ namespace Lib.DataFlow
 
         public bool Next(T msg)
         {
-            if (_d) return false;
+            if (_completed) return false;
 
 #if !BUG_DOUBLE_SEND
             Asr.IsTrue(_current.Count == 0);
@@ -141,7 +142,7 @@ namespace Lib.DataFlow
 
         public void Dispose()
         {
-            if (_d.Set()) return;
+            if (_completed.WasTrue()) return;
 
             Clear();
         }
@@ -155,7 +156,7 @@ namespace Lib.DataFlow
         public void Reset()
         {
             Clear();
-            _d = new CompleteToken();
+            _completed = false;
         }
     }
 }

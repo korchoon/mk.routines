@@ -4,9 +4,10 @@ namespace Lib.DataFlow
 {
     public interface IScope
     {
-        // todo rename to Subscribe
         void OnDispose(Action dispose);
+        void Unsubscribe(Action dispose);
     }
+
 
     public interface IScope<out T>
     {

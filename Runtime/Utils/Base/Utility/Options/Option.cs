@@ -11,7 +11,7 @@ namespace Lib.Utility
     public struct Option<T> : IEquatable<Option<T>>, IComparable<Option<T>>, IOption, IOption<T>
     {
         // ReSharper disable once StaticMemberInGenericType
-        public static readonly bool IsValueType;
+        internal static readonly bool IsValueType;
 
         [OdinSerialize, SerializeField]
         public bool HasValue { get; private set; }
@@ -21,7 +21,7 @@ namespace Lib.Utility
 
         public static implicit operator Option<T>(T arg)
         {
-            if (!IsValueType) return ReferenceEquals(arg, null) ? new Option<T>() : arg.Some();
+            if (!IsValueType) return ReferenceEquals(arg, null) ? new Option<T>() : Option.Some(arg);
 
 #if M_WARN
             if (arg.Equals(default(T)))
@@ -30,7 +30,7 @@ namespace Lib.Utility
             }
 #endif
             
-            return arg.Some();
+            return Option.Some(arg);
         }
 
         static Option()
@@ -65,24 +65,6 @@ namespace Lib.Utility
         public T ValueOr(T alternative)
         {
             return HasValue ? Value : alternative;
-        }
-
-        TResult Match<TResult>(Func<T, TResult> some, Func<TResult> none)
-        {
-            if (some == null) throw new ArgumentNullException(nameof(some));
-            if (none == null) throw new ArgumentNullException(nameof(none));
-
-            return HasValue ? some(Value) : none();
-        }
-
-        public Option<TResult> Map<TResult>(Func<T, TResult> mapping)
-        {
-            if (mapping == null) throw new ArgumentNullException(nameof(mapping));
-
-            return Match(
-                v => mapping(v).Some(),
-                Option.None<TResult>
-            );
         }
 
         public override string ToString()
@@ -124,7 +106,7 @@ namespace Lib.Utility
         {
             if (!HasValue) return 0;
 
-            return Value.IsNotNull() ? Value.GetHashCode() : 1;
+            return Option.IsNotNull(Value) ? Value.GetHashCode() : 1;
         }
 
         public int CompareTo(Option<T> other)

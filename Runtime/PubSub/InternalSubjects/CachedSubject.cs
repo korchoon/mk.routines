@@ -28,9 +28,9 @@ namespace Lib.DataFlow
                 pub.Invoke();
         }
 
-        public void OnNext(Action pub, IScope sd)
+        public void OnNext(Action pub, IScope scope)
         {
-            _subject.OnNext(pub, sd);
+            _subject.OnNext(pub, scope);
             if (_value)
                 pub.Invoke();
         }
@@ -61,9 +61,9 @@ namespace Lib.DataFlow
                 pub.Invoke(value);
         }
 
-        public void OnNext(Action<T> pub, IScope sd)
+        public void OnNext(Action<T> pub, IScope scope)
         {
-            _subject.OnNext(pub, sd);
+            _subject.OnNext(pub, scope);
             if (_value.TryGet(out var value))
                 pub.Invoke(value);
         }

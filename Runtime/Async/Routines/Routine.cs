@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Lib.DataFlow;
 using Lib.Utility;
+using Utility.AssertN;
 
 namespace Lib.Async
 {
@@ -14,7 +15,7 @@ namespace Lib.Async
         Action _moveAllAwaiters;
         bool _isCompleted;
         internal IDisposable PubDispose;
-        internal IScope<Exception> _onErr;
+        IScope<Exception> _onErr;
 
         public IScope Scope(IScope breakOn)
         {
@@ -29,7 +30,7 @@ namespace Lib.Async
             _Routine.Next(dr => dr.Ctor, StackTraceHolder.New(1), this);
 
             _moveAllAwaiters = Empty.Action();
-            StopImmediately = new CatchQueue(out _onErr);
+            StopImmediately = new CatchStack(out _onErr);
             PubDispose = React.Scope(out _scope);
             _scope.OnDispose(InnerDispose);
             _onErr.OnDispose(_ => PubDispose.Dispose());
@@ -42,7 +43,7 @@ namespace Lib.Async
         {
             _isCompleted = true;
             PubDispose.Dispose();
-            Utils.MoveNextAndClear(ref _moveAllAwaiters);
+            RoutineUtils.MoveNextAndClear(ref _moveAllAwaiters);
             _Routine.Next(dr => dr.Dispose, this);
         }
 
@@ -60,6 +61,13 @@ namespace Lib.Async
             return res;
         }
 
+        #region Static API
+
+        public static SelfScope SelfScope() => new SelfScope();
+        public static SelfDispose SelfDispose() => new SelfDispose();
+
+        #endregion
+
         public class Awaiter : ICriticalNotifyCompletion, IBreakableAwaiter
         {
             Routine _awaitableTask;
@@ -72,13 +80,13 @@ namespace Lib.Async
                 _awaitableTask = par;
                 _continuation = Empty.Action();
                 onErr.OnDispose(_DisposeWith);
-                onMoveNext += () => Utils.MoveNextAndClear(ref _continuation);
+                onMoveNext += () => RoutineUtils.MoveNextAndClear(ref _continuation);
             }
 
             void _DisposeWith(Exception err)
             {
                 _exception = err;
-                Utils.MoveNextAndClear(ref _continuation);
+                RoutineUtils.MoveNextAndClear(ref _continuation);
             }
 
             [UsedImplicitly] public bool IsCompleted => _awaitableTask._isCompleted;
@@ -110,8 +118,29 @@ namespace Lib.Async
                 if (_exception.HasValue) return;
                 _exception = e;
                 _awaitableTask.StopImmediately.DisposeWith(e);
-                Utils.MoveNextAndClear(ref _continuation);
+                RoutineUtils.MoveNextAndClear(ref _continuation);
             }
         }
+
+
+        public class _Routine : DebugTracer<_Routine, Routine>
+        {
+            public Action<StackTraceHolder> Ctor;
+            public Action Dispose;
+            public Action<IScope> SubscribeToScope;
+            public Action<IScope> SetScope;
+            public Action<Awaiter> GetAwaiter;
+        }
+
+        public class _Routine_Awaiter : DebugTracer<_Routine_Awaiter, Awaiter>
+        {
+            public Action AfterBreak;
+            public Action GetResult;
+            public Action<Exception> Thrown;
+            public Action<StackTraceHolder> OnCompleteImmediate;
+            public Action<StackTraceHolder> OnCompleteLater;
+        }
     }
+
+
 }

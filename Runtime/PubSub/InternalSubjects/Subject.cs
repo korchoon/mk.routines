@@ -8,8 +8,7 @@ namespace Lib.DataFlow
     [NonPerformant(PerfKind.GC)]
     internal class Subject<T> : ISub<T>, IPub<T>
     {
-        internal readonly CompleteToken Completed;
-        ScopeStack _comp;
+        internal bool Completed;
         Subscribers<T> _next;
 
         static readonly Pool<Subscribers<T>> NextPool = new Pool<Subscribers<T>>(() => new Subscribers<T>(), subs => subs.Reset());
@@ -17,21 +16,17 @@ namespace Lib.DataFlow
         public Subject(IScope scope)
         {
             scope.OnDispose(_Dispose);
-            _comp = new ScopeStack();
             _next = NextPool.Get();
-            Completed = new CompleteToken();
+            Completed = false;
         }
 
         void _Dispose()
         {
-            if (Completed.Set()) return;
+            if (Completed.WasTrue()) return;
 
-            _comp.Dispose();
             _next.Dispose();
 
-            _comp = null;
-
-            NextPool.Release(_next);
+            NextPool.Release(ref _next);
         }
 
         public void OnNext(Func<T, bool> pub)
@@ -42,14 +37,14 @@ namespace Lib.DataFlow
             _next.Sub(pub);
         }
 
-        public void OnNext(Action<T> pub, IScope sd)
+        public void OnNext(Action<T> pub, IScope scope)
         {
             if (Completed)
                 return;
 
             var moveNext = true;
             _next.Sub(MoveNext);
-            sd.OnDispose(Dispose);
+            scope.OnDispose(Dispose);
 
             void Dispose() => moveNext = false;
 
@@ -73,8 +68,7 @@ namespace Lib.DataFlow
 
     internal class Subject : ISub, IPub
     {
-        internal readonly CompleteToken Completed;
-        ScopeStack _comp;
+        internal bool Completed;
         Subscribers _next;
 
         static readonly Pool<Subscribers> NextPool = new Pool<Subscribers>(() => new Subscribers(), subs => subs.Reset());
@@ -82,21 +76,17 @@ namespace Lib.DataFlow
         public Subject(IScope scope)
         {
             scope.OnDispose(_Dispose);
-            _comp = new ScopeStack();
             _next = NextPool.Get();
-            Completed = new CompleteToken();
+            Completed = false;
         }
 
 
         void _Dispose()
         {
-            if (Completed.Set()) return;
+            if (Completed.WasTrue()) return;
 
-            _comp.Dispose();
             _next.Dispose();
-            _comp = null;
-
-            NextPool.Release(_next);
+            NextPool.Release(ref _next);
         }
 
         public void OnNext(Func<bool> pub)
@@ -107,14 +97,14 @@ namespace Lib.DataFlow
             _next.Sub(pub);
         }
 
-        public void OnNext(Action pub, IScope sd)
+        public void OnNext(Action pub, IScope scope)
         {
             if (Completed)
                 return;
 
             var moveNext = true;
             _next.Sub(MoveNext);
-            sd.OnDispose(Dispose);
+            scope.OnDispose(Dispose);
 
             bool MoveNext()
             {

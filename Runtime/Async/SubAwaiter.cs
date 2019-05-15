@@ -62,7 +62,7 @@ namespace Lib.Async
         void Dispose()
         {
             IsCompleted = true;
-            Utils.MoveNextAndClear(ref _continuation);
+            RoutineUtils.MoveNextAndClear(ref _continuation);
         }
     }
 
@@ -125,7 +125,7 @@ namespace Lib.Async
         void Dispose()
         {
             IsCompleted = true;
-            Utils.MoveNextAndClear(ref _continuation);
+            RoutineUtils.MoveNextAndClear(ref _continuation);
         }
     }
 }

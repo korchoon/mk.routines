@@ -20,9 +20,9 @@ namespace Lib.Async
             _sub.OnNext(pub);
         }
 
-        public void OnNext(Action<T> pub, IScope sd)
+        public void OnNext(Action<T> pub, IScope scope)
         {
-            _sub.OnNext(pub, sd);
+            _sub.OnNext(pub, scope);
         }
     }
 
@@ -45,9 +45,9 @@ namespace Lib.Async
             _sub.OnNext(pub);
         }
 
-        public void OnNext(Action pub, IScope sd)
+        public void OnNext(Action pub, IScope scope)
         {
-            _sub.OnNext(pub, sd);
+            _sub.OnNext(pub, scope);
         }
     }
 }

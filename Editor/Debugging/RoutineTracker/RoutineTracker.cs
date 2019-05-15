@@ -46,9 +46,6 @@ using Sirenix.Utilities.Editor;
         {
             var sc = new Scope() {RefId = t.Id};
             _scopes.TryAdd(sc.RefId, sc);
-            t.CtorStackTrace += msg => sc.Ctor = msg;
-            t.AfterDispose += () => sc.Disposed = true;
-            t.OnDispose += i => sc.List.Add(i);
         }
 
         void OnRoutine(_Routine evt)
