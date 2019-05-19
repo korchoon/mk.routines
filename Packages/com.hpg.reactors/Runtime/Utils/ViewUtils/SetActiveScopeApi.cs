@@ -7,7 +7,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.UI;
-using Utility.AssertN;
+using Utility.Asserts;
 
 namespace Lib
 {

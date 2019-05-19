@@ -4,22 +4,27 @@ using Game.Proto;
 using Lib.Async;
 using Lib.Attributes;
 using Lib.Utility;
-using Utility.AssertN;
+using Utility.Asserts;
 
 namespace Lib.DataFlow
 {
-    [NonPerformant(PerfKind.GC)]
     internal sealed class Subscribers : IPub
     {
-        Queue<Func<bool>> _next;
-        Queue<Func<bool>> _current;
-        bool _completed;
+        struct Item
+        {
+            public Action Action;
+            public IScope Scope;
+        }
+
+        Queue<Item> _next;
+        Queue<Item> _current;
+        internal bool Completed;
 
         public Subscribers()
         {
-            _next = new Queue<Func<bool>>();
-            _current = new Queue<Func<bool>>();
-            _completed = false;
+            _next = new Queue<Item>();
+            _current = new Queue<Item>();
+            Completed = false;
         }
 
         void Swap()
@@ -29,17 +34,18 @@ namespace Lib.DataFlow
             _current = buf;
         }
 
-        public bool Next()
+        public void Next()
         {
-            if (_completed) return false;
+            if (Completed) return;
 
 #if !BUG_DOUBLE_SEND
-            Asr.IsTrue(_current.Count == 0); 
+            Asr.IsTrue(_current.Count == 0);
             Swap();
 #else
+
             if (_current.Count == 0)
                 Swap();
-            else if (_next.Count > 0)
+            else if (_current.Count > 0 && _next.Count > 0) 
                 Run(_next, _current);
 #endif
             // _next cleared
@@ -47,25 +53,35 @@ namespace Lib.DataFlow
             Run(_current, _next);
             // _current cleared
 
-            return true;
+
+            return;
         }
 
-        static void Run(Queue<Func<bool>> current, Queue<Func<bool>> next)
+
+        static void Run(Queue<Item> current, Queue<Item> next)
         {
             while (current.Count > 0)
             {
                 var callback = current.Dequeue();
-                var moveNext = callback.Invoke();
-                if (moveNext)
-                    next.Enqueue(callback);
+                if (callback.Scope.Completed)
+                    continue;
+
+                callback.Action.Invoke();
+                if (callback.Scope.Completed)
+                    continue;
+
+                next.Enqueue(callback);
             }
         }
 
-        public void Sub(Func<bool> moveNext) => _next.Enqueue(moveNext);
+        public void Sub(Action action, IScope scope)
+        {
+            _next.Enqueue(new Item() {Action = action, Scope = scope});
+        }
 
         public void Dispose()
         {
-            if (_completed.WasTrue()) return;
+            if (Completed.WasTrue()) return;
 
             Clear();
         }
@@ -79,7 +95,7 @@ namespace Lib.DataFlow
         public void Reset()
         {
             Clear();
-            _completed = false;
+            Completed = false;
         }
     }
 
@@ -87,15 +103,21 @@ namespace Lib.DataFlow
     [NonPerformant(PerfKind.GC)]
     internal sealed class Subscribers<T> : IPub<T>
     {
-        Queue<Func<T, bool>> _next;
-        Queue<Func<T, bool>> _current;
-        bool _completed;
+        struct Item
+        {
+            public Action<T> Action;
+            public IScope Scope;
+        }
+
+        Queue<Item> _next;
+        Queue<Item> _current;
+        internal bool Completed;
 
         public Subscribers()
         {
-            _next = new Queue<Func<T, bool>>();
-            _current = new Queue<Func<T, bool>>();
-            _completed = false;
+            _next = new Queue<Item>();
+            _current = new Queue<Item>();
+            Completed = false;
         }
 
         void Swap()
@@ -105,9 +127,12 @@ namespace Lib.DataFlow
             _current = buf;
         }
 
-        public bool Next(T msg)
+
+        public void Sub(Action<T> action, IScope scope) => _next.Enqueue(new Item() {Action = action, Scope = scope});
+
+        public void Next(T msg)
         {
-            if (_completed) return false;
+            if (Completed) return;
 
 #if !BUG_DOUBLE_SEND
             Asr.IsTrue(_current.Count == 0);
@@ -115,7 +140,7 @@ namespace Lib.DataFlow
 #else
             if (_current.Count == 0)
                 Swap();
-            else if (_next.Count > 0)
+            else if (_current.Count > 0 && _next.Count > 0)
                 Run(_next, _current, msg);
 #endif
             // _next cleared
@@ -123,26 +148,30 @@ namespace Lib.DataFlow
             Run(_current, _next, msg);
             // _current cleared
 
-            return true;
+            return;
         }
 
-        static void Run(Queue<Func<T, bool>> current, Queue<Func<T, bool>> next, T msg)
+
+        static void Run(Queue<Item> prev, Queue<Item> next, T msg)
         {
-            while (current.Count > 0)
+            while (prev.Count > 0)
             {
-                var callback = current.Dequeue();
-                var moveNext = callback.Invoke(msg);
-                if (moveNext)
-                    next.Enqueue(callback);
+                var callback = prev.Dequeue();
+                if (callback.Scope.Completed)
+                    continue;
+
+                callback.Action.Invoke(msg);
+                if (callback.Scope.Completed)
+                    continue;
+
+                next.Enqueue(callback);
             }
         }
 
 
-        public void Sub(Func<T, bool> moveNext) => _next.Enqueue(moveNext);
-
         public void Dispose()
         {
-            if (_completed.WasTrue()) return;
+            if (Completed.WasTrue()) return;
 
             Clear();
         }
@@ -156,7 +185,7 @@ namespace Lib.DataFlow
         public void Reset()
         {
             Clear();
-            _completed = false;
+            Completed = false;
         }
     }
 }

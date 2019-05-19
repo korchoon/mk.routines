@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Utility.AssertN
+namespace Utility.Asserts
 {
     [DebuggerStepThrough]
     public static class Warn

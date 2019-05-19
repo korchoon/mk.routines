@@ -30,7 +30,7 @@ namespace Game.Tests
 
             public Ctx(out IPub timer, IScope scope)
             {
-                (timer, Scheduler) = React.Channel(scope);
+                (timer, Scheduler) = React.PubSub(scope);
                 Checkpoint = new TestCheckpoint<Check>();
                 _SubRoutines = new HashSet<Routine>();
             }

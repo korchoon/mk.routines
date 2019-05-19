@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Security;
 using JetBrains.Annotations;
 using Lib.DataFlow;
-using Utility.AssertN;
+using Utility.Asserts;
 using Debug = UnityEngine.Debug;
 
 namespace Lib.Async
@@ -12,7 +12,6 @@ namespace Lib.Async
     {
         Action _continuation;
         IBreakableAwaiter _innerAwaiter;
-        Action _cached;
 
         RoutineBuilder()
         {
@@ -42,6 +41,7 @@ namespace Lib.Async
         [UsedImplicitly]
         public void SetResult()
         {
+            BreakInner();
             Task.PubDispose.Dispose();
             _RoutineBuilder.Next(d => d.AfterSetResult, this);
         }
@@ -50,6 +50,7 @@ namespace Lib.Async
         [UsedImplicitly]
         public void SetException(Exception e)
         {
+            BreakInner();
             Task.StopImmediately.DisposeWith(e);
 
             if (!(e is RoutineStoppedException))
@@ -61,6 +62,10 @@ namespace Lib.Async
             _RoutineBuilder.Next(d => d.AfterSetException, e, this);
         }
 
+        void BreakInner()
+        {
+            _innerAwaiter?.Break(RoutineStoppedException.Empty);
+        }
 
         [UsedImplicitly]
         public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
@@ -73,7 +78,6 @@ namespace Lib.Async
                     awaiter.OnCompleted(_continuation);
                     _RoutineBuilder.Next(d => d.CurrentAwait, StackTraceHolder.New(3), this);
                     _innerAwaiter = breakableAwaiter;
-                    ReorderBreak();
                     break;
                 case SelfScopeAwaiter selfScopeAwaiter:
                     selfScopeAwaiter.Value = Task._scope;
@@ -89,15 +93,6 @@ namespace Lib.Async
                     Asr.Fail("passed unbreakable awaiter");
                     break;
             }
-        }
-
-        void ReorderBreak()
-        {
-            if (_cached == null)
-                _cached = () => _innerAwaiter?.Break(RoutineStoppedException.Empty);
-
-            Task._scope.Unsubscribe(_cached);
-            Task._scope.OnDispose(_cached);
         }
 
 

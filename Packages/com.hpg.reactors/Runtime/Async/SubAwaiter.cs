@@ -5,7 +5,7 @@ using Lib.DataFlow;
 using Lib.Pooling;
 using Lib.Utility;
 using Utility;
-using Utility.AssertN;
+using Utility.Asserts;
 
 namespace Lib.Async
 {
@@ -45,21 +45,15 @@ namespace Lib.Async
         [UsedImplicitly]
         void INotifyCompletion.OnCompleted(Action continuation) => UnsafeOnCompleted(continuation);
 
-        internal bool OneOff()
-        {
-            Dispose();
-            return false;
-        }
-
         public void Break(Exception e)
         {
             if (_exception.HasValue) return;
 
             _exception = e;
-            Dispose();
+            _Dispose();
         }
 
-        void Dispose()
+        internal void _Dispose()
         {
             IsCompleted = true;
             RoutineUtils.MoveNextAndClear(ref _continuation);
@@ -76,13 +70,12 @@ namespace Lib.Async
         
         public SubAwaiter(ISub<T> ex)
         {
-            ex.OnNext(OneOff);
+            ex.OnNextOnce(OneOff);
 
-            bool OneOff(T msg)
+            void OneOff(T msg)
             {
                 _result = msg;
                 Dispose();
-                return false;
             }
         }
 

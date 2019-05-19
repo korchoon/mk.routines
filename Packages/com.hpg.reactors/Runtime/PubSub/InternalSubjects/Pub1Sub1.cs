@@ -1,14 +1,15 @@
 using System;
 using Lib.Async;
-using Utility.AssertN;
+using Utility.Asserts;
 
 namespace Lib.DataFlow
 {
-    internal class Pub1Sub1 : ISub, IPub
+
+       internal class Pub1Sub1 : ISub, IPub
     {
         Action _action;
         IScope _scope;
-        bool _done;
+        bool _completed;
         Func<bool> _pred;
 
         public Pub1Sub1(IScope scope)
@@ -22,26 +23,14 @@ namespace Lib.DataFlow
         void _Complete()
         {
             _scope.Unsubscribe(_Complete);
-            _done = true;
+            _completed = true;
             _action = Empty.Action();
-            _scope = ScopeNever.Ever;
-        }
-
-        public void OnNext(Func<bool> pub)
-        {
-            if (_done)
-            {
-                Asr.Fail("Trying to subscribe more than once or after 1st publish");
-                return;
-            }
-
-            Asr.IsTrue(_action == Empty.Action());
-            _pred = pub;
+            _scope = ScopeNever.Never;
         }
 
         public void OnNext(Action pub, IScope scope)
         {
-            if (_done)
+            if (_completed)
             {
                 Asr.Fail("Trying to subscribe more than once or after 1st publish");
                 return;
@@ -57,16 +46,17 @@ namespace Lib.DataFlow
             }
         }
 
-        public bool Next()
+        public void Next()
         {
-            if (_done.WasTrue())
-                return false;
+            Asr.IsFalse(_completed);
+            if (_completed.WasTrue())
+                return;
 
             _pred.Invoke();
             RoutineUtils.MoveNextAndClear(ref _action);
             _Complete();
-            return false;
         }
+
     }
 
     internal class Pub1Sub1<T> : ISub<T>, IPub<T>
@@ -74,7 +64,7 @@ namespace Lib.DataFlow
         Action<T> _action;
         Func<T, bool> _pred;
         IScope _scope;
-        bool _done;
+        bool _completed;
 
         public Pub1Sub1(IScope scope)
         {
@@ -87,26 +77,15 @@ namespace Lib.DataFlow
         void _Complete()
         {
             _scope.Unsubscribe(_Complete);
-            _done = true;
+            _completed = true;
             _action = Empty.Action<T>();
-            _scope = ScopeNever.Ever;
+            _scope = ScopeNever.Never;
         }
 
-        public void OnNext(Func<T, bool> pub)
-        {
-            if (_done)
-            {
-                Asr.Fail("Trying to subscribe more than once or after 1st publish");
-                return;
-            }
-
-            Asr.IsTrue(_action == Empty.Action<T>());
-            _pred = pub;
-        }
 
         public void OnNext(Action<T> pub, IScope scope)
         {
-            if (_done)
+            if (_completed)
             {
                 Asr.Fail("Trying to subscribe more than once or after 1st publish");
                 return;
@@ -122,15 +101,16 @@ namespace Lib.DataFlow
             }
         }
 
-        public bool Next(T msg)
+        public void Next(T msg)
         {
-            if (_done.WasTrue())
-                return false;
+//            Asr.IsFalse(_completed);
+            if (_completed.WasTrue())
+                return;
 
             _pred.Invoke(msg);
             RoutineUtils.MoveNextAndClear(ref _action, msg);
             _Complete();
-            return false;
         }
+
     }
 }

@@ -13,20 +13,14 @@ namespace Lib.DataFlow
             _subject = new Subject(scope);
         }
 
-        public bool Next()
+        public void Next()
         {
-            if (_subject.Completed) return false;
+            if (_subject.Completed) return;
 
             _value = true;
-            return _subject.Next();
+            _subject.Next();
         }
 
-        public void OnNext(Func<bool> pub)
-        {
-            _subject.OnNext(pub);
-            if (_value)
-                pub.Invoke();
-        }
 
         public void OnNext(Action pub, IScope scope)
         {
@@ -46,20 +40,14 @@ namespace Lib.DataFlow
             _subject = new Subject<T>(scope);
         }
 
-        public bool Next(T msg)
+        public void Next(T msg)
         {
-            if (_subject.Completed) return false;
+            if (_subject.Completed) return;
 
             _value = msg;
-            return _subject.Next(msg);
+            _subject.Next(msg);
         }
 
-        public void OnNext(Func<T, bool> pub)
-        {
-            _subject.OnNext(pub);
-            if (_value.TryGet(out var value))
-                pub.Invoke(value);
-        }
 
         public void OnNext(Action<T> pub, IScope scope)
         {

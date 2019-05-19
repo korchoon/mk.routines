@@ -7,49 +7,84 @@ using UnityEngine;
 
 namespace Lib.DataFlow
 {
+    
     [HideReferenceObjectPicker, InlineProperty]
     public class StackTraceHolder
     {
-        static Cache<StackTrace> _cache = new Cache<StackTrace>();
+        #region static
+
+        static StackTraceCache _cache;
+
+        static StackTraceHolder()
+        {
+            _cache = new StackTraceCache();
+        }
 
         public static StackTraceHolder New(int skip) => new StackTraceHolder(skip);
 
+        #endregion
+        
+        int _id;
+
         public string FrameFileInfo()
         {
-            var stackFrame = _cache.Get(_id).GetFrame(0);
+            if (!_cache.TryGetValue(_id, out var trace))
+                return String.Empty;
+
+            var stackFrame = trace.GetFrame(0);
+            return Line2(stackFrame: stackFrame);
+        }
+
+        static string Line2(StackFrame stackFrame)
+        {
             var line = stackFrame.SourceLine().Trim();
             var file = stackFrame.AsString();
-            return $"{line}\t\t[{file}]";
+            return $"{line}\t[{file}]";
         }
 
         StackTraceHolder(int skip = 0)
         {
-            var trace = new StackTrace(skip + 1, true);
-            _id = _cache.Store(trace);
-            Name = Frames(f => f.First().AsString());
+            _id = _cache.Store(skip + 1);
+            Name = GetName().Trim();
         }
 
         string Frames(Func<IEnumerable<StackFrame>, string> selector)
         {
-            if (!_cache.All.TryGetValue(_id, out var res))
+            if (!_cache.TryGetValue(_id, out var res))
                 return string.Empty;
 
+            if (res == null)
+                return String.Empty;
+            
             if (res.FrameCount == 0)
                 return string.Empty;
 
-            return selector.Invoke(res.GetFrames());
+            
+            var stackFrames = res.GetFrames();
+            return selector.Invoke(stackFrames);
         }
 
-        int _id;
 
-        [Button, HorizontalGroup("1")]
-        void Breadcrumbs() => Multiline = Frames(f => f.Reverse().Print());
+        string GetName()
+        {
+            return Frames(f =>
+            {
+                var firstOrDefault = f.SkipInner().SkipMoveNext().FirstOrDefault();
+                if (firstOrDefault == null)
+                    return String.Empty;
+                
+                return Line2(firstOrDefault);
+            });
+        }
 
-        [Button, HorizontalGroup("1")]
-        void Full() => Multiline = _cache.Get(_id)?.ToString();
+        [Button(ButtonSizes.Small), HorizontalGroup("1")]
+        void StackTrace()
+        {
+            if (!_cache.TryGetValue(_id, out var trace))
+                return;
 
-        [Button, HorizontalGroup("1")]
-        void Top() => Line = Frames(f => f.SkipInner().Print());
+            Multiline = trace?.ToString();
+        }
 
         bool _LineEmpty() => Line.NullOrEmpty();
         bool _MultilineEmpty() => Multiline.NullOrEmpty();
@@ -62,5 +97,6 @@ namespace Lib.DataFlow
 
         [HideIf(nameof(_MultilineEmpty)), Multiline(3), HideLabel]
         public string Multiline;
+
     }
 }

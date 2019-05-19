@@ -6,11 +6,15 @@ namespace Lib.DataFlow
 {
     internal class ScopeNever : IScope
     {
-        public static ScopeNever Ever { get; } = new ScopeNever();
+        public static ScopeNever Never { get; } = new ScopeNever(true);
+        public static ScopeNever Already { get; } = new ScopeNever(true);
 
-        ScopeNever()
+        ScopeNever(bool completed)
         {
+            Completed = completed;
         }
+
+        public bool Completed { get; }
 
         public void OnDispose(Action dispose)
         {

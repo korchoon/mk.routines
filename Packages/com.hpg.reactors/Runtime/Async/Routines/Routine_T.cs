@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 using Lib.DataFlow;
 using Lib.Utility;
 using Utility;
-using Utility.AssertN;
+using Utility.Asserts;
 using Debug = UnityEngine.Debug;
 
 namespace Lib.Async
@@ -18,7 +18,7 @@ namespace Lib.Async
         internal IDisposable _dispose;
         internal IScope Scope;
         internal CatchStack PubErr;
-        internal IScope<Exception> _onErr;
+        internal IErrorScope<Exception> _onErr;
         Action _moveAllAwaiters;
         bool _isCompleted;
 
@@ -53,7 +53,7 @@ namespace Lib.Async
             Action _continuation;
             Option<Exception> _exception;
 
-            public Awaiter(Routine<T> par, IScope<Exception> onErr, ref Action onMoveNext)
+            internal Awaiter(Routine<T> par, IErrorScope<Exception> onErr, ref Action onMoveNext)
             {
                 _awaitableTask = par;
                 _continuation = Empty.Action();
@@ -72,7 +72,13 @@ namespace Lib.Async
             [UsedImplicitly]
             public T GetResult()
             {
-                if (_exception.TryGet(out var err)) throw err;
+                if (_exception.TryGet(out var err))
+                {
+                    if (err is RoutineStoppedException) throw err;
+
+                    throw new Exception("See Inner", err);
+                }
+
                 if (_awaitableTask._res.TryGet(out var result)) return result;
 
                 Asr.Fail("default return value");

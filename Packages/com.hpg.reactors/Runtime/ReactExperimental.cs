@@ -11,6 +11,21 @@ namespace Lib
 {
     public static class ReactExperimental
     {
+        [MustUseReturnValue]
+        // single-next, single-onnext 
+        internal static (IPub<T> pub, ISub<T> sub) PubSub11<T>(this IScope scope)
+        {
+            var subject = new Pub1Sub1<T>(scope);
+            return (subject, subject);
+        }
+
+        [MustUseReturnValue]
+        // single-next, single-onnext 
+        internal static (IPub pub, ISub sub) PubSub11(this IScope scope)
+        {
+            var subject = new Pub1Sub1(scope);
+            return (subject, subject);
+        }
 
 
         public static CachedSubject<T> FromEventCached<T>(Action<Action<T>> sub, Action<Action<T>> unsub, IScope scope)
@@ -26,7 +41,7 @@ namespace Lib
 
         public static ISub<T> FromEvent<T>(Action<Action<T>> sub, Action<Action<T>> unsub, IScope scope)
         {
-            var (pub, res) = React.Channel<T>(scope);
+            var (pub, res) = React.PubSub<T>(scope);
             sub.Invoke(Action);
             scope.OnDispose(() => unsub.Invoke(Action));
 
@@ -48,7 +63,7 @@ namespace Lib
             ISub<T> DynamicMethod()
             {
                 var routine = callback.Invoke();
-                var (p, s) = React.Channel<T>(scope);
+                var (p, s) = React.PubSub<T>(scope);
 
                 scope.OnDispose(routine._dispose.Dispose);
                 var aw = routine.GetAwaiter();
@@ -80,21 +95,21 @@ namespace Lib
 
         public static IPub FromAction(this Action t, IScope sd)
         {
-            var (pub1, sub1) = React.Channel(sd);
+            var (pub1, sub1) = React.PubSub(sd);
             sub1.OnNext(t.Invoke, sd);
             return pub1;
         }
 
         public static IPub<T> FromAction<T>(this Action<T> t, IScope sd)
         {
-            var (pub1, sub1) = React.Channel<T>(sd);
+            var (pub1, sub1) = React.PubSub<T>(sd);
             sub1.OnNext(t.Invoke, sd);
             return pub1;
         }
 
         public static IPub Wrap(this IPub pub, Action<IPub> proxy, IScope sd)
         {
-            var (pub1, sub1) = React.Channel(sd);
+            var (pub1, sub1) = React.PubSub(sd);
             sub1.OnNext(Pub, sd);
             return pub1;
 
@@ -103,7 +118,7 @@ namespace Lib
 
         public static IPub<T> Wrap<T>(this IPub<T> pub, Action<T, IPub<T>> proxy, IScope sd)
         {
-            var (pub1, sub1) = React.Channel<T>(sd);
+            var (pub1, sub1) = React.PubSub<T>(sd);
             sub1.OnNext(Pub, sd);
             return pub1;
 
@@ -111,7 +126,7 @@ namespace Lib
         }
 
         [MustUseReturnValue]
-        public static IDisposeWith<Exception> ErrScope(out IScope<Exception> scope)
+        internal static IDisposeWith<Exception> ErrScope(out IErrorScope<Exception> scope)
         {
             return new CatchStack(out scope);
         }
@@ -120,7 +135,7 @@ namespace Lib
         {
             IPub<T> pub;
             ISub<T> sub;
-            (pub, sub) = React.Channel<T>(scope);
+            (pub, sub) = React.PubSub<T>(scope);
             var res = sub;
             ctor.Invoke(pub).DisposeOn(scope);
             return res;
@@ -128,7 +143,7 @@ namespace Lib
 
         public static ISub ToSub(this Routine r, IScope scope)
         {
-            var (pub, sub) = React.Channel(scope);
+            var (pub, sub) = React.PubSub(scope);
 
             // will implicitly dispose r
             Local().DisposeOn(scope);

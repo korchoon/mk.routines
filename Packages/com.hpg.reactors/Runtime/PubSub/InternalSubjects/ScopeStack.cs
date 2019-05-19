@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Lib.Pooling;
-using Utility.AssertN;
+using Utility.Asserts;
 
 namespace Lib.DataFlow
 {
@@ -28,7 +28,7 @@ namespace Lib.DataFlow
 
             _disposed = true;
 
-            using (ListPool.Scoped(out var tmpList))
+            using (ListPool.GetScoped(out var tmpList))
             {
                 tmpList.AddRange(_set);
                 HashSetPool.Release(ref _set);
@@ -43,6 +43,8 @@ namespace Lib.DataFlow
             _Scope.Deregister(this);
         }
 
+        public bool Completed => _disposed;
+
         public void OnDispose(Action dispose)
         {
             if (_disposed)
@@ -52,7 +54,7 @@ namespace Lib.DataFlow
             }
 
             _set.Add(dispose);
-            _Scope.Next(s => s.Finally, StackTraceHolder.New(1), this);
+            _Scope.Next(s => s.OnDispose, (StackTraceHolder.New(1), dispose), this);
         }
 
         public void Unsubscribe(Action dispose)
@@ -60,7 +62,7 @@ namespace Lib.DataFlow
             if (_disposed) return;
 
             _set.Remove(dispose);
-            _Scope.Next(s => s.Unsubscribe, StackTraceHolder.New(1), this);
+            _Scope.Next(s => s.Unsubscribe, (StackTraceHolder.New(1), dispose), this);
         }
     }
 }

@@ -15,13 +15,11 @@ namespace Lib.DataFlow
         public static Func<bool> FuncPredicate() => FuncEmpty.Empty;
         public static void Func<T>(out Func<T> res, T val = default) => res = () => val;
 
-        public static IScope Scope() => ScopeNever.Ever;
-
         public static ISub Sub() => SubNever.Ever;
         public static ISub<T> Sub<T>() => SubNever<T>.Ever;
         public static void Sub<T>(out ISub<T> res) => res = SubNever<T>.Ever;
 
-        public static IPub Pub() => PubNever.Ever;
-        public static IPub<T> Pub<T>() => PubNever<T>.Ever;
+        public static IPub Pub() => PubNever.Never;
+        public static IPub<T> Pub<T>() => PubNever<T>.Never;
     }
 }
