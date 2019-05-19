@@ -6,7 +6,7 @@ using Lib.DataFlow;
 using Lib.Utility;
 using UnityEngine;
 using Utility;
-using Utility.AssertN;
+using Utility.Asserts;
 using Debug = UnityEngine.Debug;
 
 namespace Lib.Async
@@ -70,7 +70,7 @@ namespace Lib.Async
 
             Sch.Physics = StartSch("Physics", out _fixedUpdate, scope);
             Sch.PhysicsTime = StartSchTime("PhysicsTime", out _fixedUpdateTime, scope);
-            (SchPub.PubError, Sch.OnError) = React.Channel<Exception>(Sch.Scope);
+            (SchPub.PubError, Sch.OnError) = React.PubSub<Exception>(Sch.Scope);
         }
 
 

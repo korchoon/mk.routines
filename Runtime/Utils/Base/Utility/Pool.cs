@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 using Lib.DataFlow;
-using Utility.AssertN;
+using Utility.Asserts;
 
 namespace Lib.Pooling
 {
@@ -74,7 +74,7 @@ namespace Lib.Pooling
 #endif
         }
 
-        public _Scope Scoped(out T tmp)
+        public _Scope GetScoped(out T tmp)
         {
             tmp = Get();
             return new _Scope(this, ref tmp);

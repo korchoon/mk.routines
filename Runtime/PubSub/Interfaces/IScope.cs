@@ -4,14 +4,8 @@ namespace Lib.DataFlow
 {
     public interface IScope
     {
+        bool Completed { get; }
         void OnDispose(Action dispose);
         void Unsubscribe(Action dispose);
-    }
-
-
-    public interface IScope<out T>
-    {
-        // todo rename to Subscribe
-        void OnDispose(Action<T> onMsg);
     }
 }

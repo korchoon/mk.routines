@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Runtime.Serialization;
 using Lib.DataFlow;
 using Utility;
-using Utility.AssertN;
+using Utility.Asserts;
 
 namespace Lib.Async
 {

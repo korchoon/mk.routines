@@ -3,12 +3,12 @@ using System.Collections.Generic;
 
 namespace Lib.DataFlow
 {
-    internal class CatchStack : IDisposeWith<Exception>, IScope<Exception>
+    internal class CatchStack : IDisposeWith<Exception>, IErrorScope<Exception>
     {
         Stack<Action<Exception>> _stack;
         bool _disposed;
 
-        public CatchStack(out IScope<Exception> scope)
+        public CatchStack(out IErrorScope<Exception> scope)
         {
             _stack = new Stack<Action<Exception>>();
             _disposed = false;

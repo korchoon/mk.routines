@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Lib.DataFlow;
 using Lib.Utility;
-using Utility.AssertN;
+using Utility.Asserts;
 
 namespace Lib.Async
 {
@@ -15,9 +15,12 @@ namespace Lib.Async
         Action _moveAllAwaiters;
         bool _isCompleted;
         internal IDisposable PubDispose;
-        IScope<Exception> _onErr;
+        IErrorScope<Exception> _onErr;
 
-        public IScope Scope(IScope breakOn)
+        [Obsolete("Use GetScope instead")]
+        public IScope Scope(IScope breakOn) => GetScope(breakOn);
+
+        public IScope GetScope(IScope breakOn)
         {
             breakOn.OnDispose(() => StopImmediately.DisposeWith(RoutineStoppedException.Empty));
             breakOn.OnDispose(PubDispose.Dispose);
@@ -34,8 +37,6 @@ namespace Lib.Async
             PubDispose = React.Scope(out _scope);
             _scope.OnDispose(InnerDispose);
             _onErr.OnDispose(_ => PubDispose.Dispose());
-
-//            DR.Next(dr => dr.SetScope, _scope, this);
         }
 
 
@@ -74,7 +75,7 @@ namespace Lib.Async
             Action _continuation;
             Option<Exception> _exception;
 
-            public Awaiter(Routine par, IScope<Exception> onErr, ref Action onMoveNext)
+            internal Awaiter(Routine par, IErrorScope<Exception> onErr, ref Action onMoveNext)
             {
                 _Routine_Awaiter.Register(this);
                 _awaitableTask = par;
@@ -94,7 +95,12 @@ namespace Lib.Async
             [UsedImplicitly]
             public void GetResult()
             {
-                if (_exception.TryGet(out var err)) throw err;
+                if (_exception.TryGet(out var err))
+                {
+                    if (err is RoutineStoppedException) throw err;
+
+                    throw new Exception("See Inner", err);
+                }
             }
 
 
@@ -141,6 +147,4 @@ namespace Lib.Async
             public Action<StackTraceHolder> OnCompleteLater;
         }
     }
-
-
 }

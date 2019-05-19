@@ -1,11 +1,8 @@
-﻿using Lib;
-using Utility.AssertN;
-
-namespace Utility
+﻿namespace Utility
 {
-#if UNITY_EDITOR
-    using System;
-    using System.Linq;
+#if UNITY_EDITOR && M_BUILD_FLAGS
+    using Lib;
+    using Asserts;
     using JetBrains.Annotations;
     using UnityEngine;
     using UnityEditor;
@@ -25,7 +22,7 @@ namespace Utility
 
             PlayerSettings.SetScriptingDefineSymbolsForGroup(currentTarget, definesString);
             AssetDatabase.SaveAssets();
-            
+
             Debug.Log($"updated defines to '{PlayerSettings.GetScriptingDefineSymbolsForGroup(currentTarget)}'");
         }
     }
@@ -63,6 +60,11 @@ namespace Utility
         }
     }
 #endif
+
+#if DEBUG_TRACE && !UNITY_EDITOR
+    #error flag DEBUG_TRACE should be used only in Editor  
+#endif
+
 
     public static class FLAGS
     {

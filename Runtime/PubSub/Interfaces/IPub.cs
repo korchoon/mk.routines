@@ -2,11 +2,11 @@
 {
     public interface IPub
     {
-        bool Next();
+        void Next();
     }
 
     public interface IPub<in T>
     {
-        bool Next(T msg);
+        void Next(T msg);
     }
 }

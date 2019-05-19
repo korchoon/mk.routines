@@ -40,9 +40,9 @@ namespace Game.Tests
                 };
 
 
-                var (pubSch, sch) = React.Channel(scope);
+                var (pubSch, sch) = React.PubSub(scope);
                 TestTracer.Register(sch);
-                Outer(sch).Scope(scope);
+                Outer(sch).GetScope(scope);
 
                 assert1.Invoke();
 
@@ -71,9 +71,9 @@ namespace Game.Tests
                 };
 
 
-                var (pubSch, sch) = React.Channel(scope);
+                var (pubSch, sch) = React.PubSub(scope);
                 TestTracer.Register(sch);
-                Outer(sch).Scope(scope);
+                Outer(sch).GetScope(scope);
 
                 brk.Dispose();
                 assert1.Invoke();
@@ -97,9 +97,9 @@ namespace Game.Tests
                 };
 
 
-                var (pubSch, sch) = React.Channel(scope);
+                var (pubSch, sch) = React.PubSub(scope);
                 TestTracer.Register(sch);
-                Outer(sch).Scope(scope);
+                Outer(sch).GetScope(scope);
                 pubSch.Next();
                 brk.Dispose();
                 assert1.Invoke();
@@ -123,9 +123,9 @@ namespace Game.Tests
                 };
 
 
-                var (pubSch, sch) = React.Channel(scope);
+                var (pubSch, sch) = React.PubSub(scope);
                 TestTracer.Register(sch);
-                Outer(sch).Scope(scope);
+                Outer(sch).GetScope(scope);
                 pubSch.Next();
                 pubSch.Next();
                 brk.Dispose();

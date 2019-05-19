@@ -7,7 +7,7 @@ using Lib.DataFlow;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Utility;
-using Utility.AssertN;
+using Utility.Asserts;
 
 namespace Merge.View
 {
@@ -30,8 +30,7 @@ namespace Merge.View
         public static ISub ToSub(this Button btn, IScope sd)
         {
             Warn.IsTrue(btn.gameObject.activeInHierarchy, $"Button on {SetActiveScopeApi.Path(btn.gameObject)} - should be active");
-            sd = sd ?? Empty.Scope();
-            var (pub, sub) = React.Channel(sd);
+            var (pub, sub) = React.PubSub(sd);
             var onClick = btn.onClick;
             onClick.AddListener(_Next);
             sd.OnDispose(() => onClick.RemoveListener(_Next));
@@ -43,7 +42,7 @@ namespace Merge.View
         [MustUseReturnValue]
         public static ISub ToSub(this EventTrigger et, EventTriggerType type, IScope sd)
         {
-            var (pub, sub) = React.Channel(sd);
+            var (pub, sub) = React.PubSub(sd);
             Register(et, type, _ => pub.Next(), sd);
             return sub;
         }
@@ -51,7 +50,7 @@ namespace Merge.View
         [MustUseReturnValue]
         public static ISub<PointerEventData> Register(this EventTrigger et, EventTriggerType type, IScope sd)
         {
-            var (pub, sub) = React.Channel<PointerEventData>(sd);
+            var (pub, sub) = React.PubSub<PointerEventData>(sd);
             Register(et, type, pub.NextVoid, sd);
             return sub;
         }

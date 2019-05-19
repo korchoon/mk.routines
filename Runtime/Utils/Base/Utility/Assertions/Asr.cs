@@ -7,7 +7,7 @@ using Lib.Utility;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-namespace Utility.AssertN
+namespace Utility.Asserts
 {
     [DebuggerStepThrough]
     public static class Asr

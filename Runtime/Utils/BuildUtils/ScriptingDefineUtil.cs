@@ -1,8 +1,9 @@
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
-using Utility.AssertN;
+using Utility.Asserts;
 
 namespace Lib
 {
@@ -84,3 +85,4 @@ namespace Lib
         static bool Valid(string s) => !Invalid(s);
     }
 }
+#endif

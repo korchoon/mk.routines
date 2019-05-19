@@ -8,17 +8,12 @@ namespace Lib.Async
         internal SchBase(string name, out IPub<T> s, IScope scope)
         {
             _toString = name;
-            (s, _sub) = React.Channel<T>(scope);
+            (s, _sub) = React.PubSub<T>(scope);
         }
 
         string _toString;
         public override string ToString() => _toString;
         ISub<T> _sub;
-
-        public void OnNext(Func<T, bool> pub)
-        {
-            _sub.OnNext(pub);
-        }
 
         public void OnNext(Action<T> pub, IScope scope)
         {
@@ -32,18 +27,13 @@ namespace Lib.Async
         internal SchBase(string name, out IPub s, IScope scope)
         {
             _toString = name;
-            (s, _sub) = React.Channel(scope);
+            (s, _sub) = React.PubSub(scope);
         }
 
         string _toString;
         public override string ToString() => _toString;
 
         ISub _sub;
-
-        public void OnNext(Func<bool> pub)
-        {
-            _sub.OnNext(pub);
-        }
 
         public void OnNext(Action pub, IScope scope)
         {

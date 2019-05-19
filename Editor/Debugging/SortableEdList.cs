@@ -7,10 +7,10 @@ namespace Lib.DataFlow
     [InlineProperty, HideLabel, HideReferenceObjectPicker]
     public class SortableEdList<T>
     {
-        [Button(ButtonSizes.Large), PropertyOrder(-1)]
-        void Sort() => _sort.Invoke();
+//        [Button(ButtonSizes.Large), PropertyOrder(-1)]
+        public void Sort() => _sort.Invoke();
 
-        [ListDrawerSettings(DraggableItems = false, IsReadOnly = true, ShowIndexLabels = false, HideRemoveButton = true, Expanded = false)]
+        [HideLabel, ListDrawerSettings(DraggableItems = false, IsReadOnly = true, ShowIndexLabels = false, HideRemoveButton = true, Expanded = false)]
         public List<T> All;
 
         Action _sort;
@@ -22,5 +22,4 @@ namespace Lib.DataFlow
             _sort = () => All.Sort(comparison);
         }
     }
-
 }

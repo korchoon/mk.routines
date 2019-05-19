@@ -10,10 +10,6 @@ namespace Lib.DataFlow
         {
         }
 
-        public void OnNext(Func<bool> pub)
-        {
-        }
-
         public void OnNext(Action pub, IScope scope)
         {
         }

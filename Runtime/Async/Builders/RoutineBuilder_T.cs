@@ -5,7 +5,7 @@ using System.Security;
 using JetBrains.Annotations;
 using Lib.DataFlow;
 using Utility;
-using Utility.AssertN;
+using Utility.Asserts;
 using Debug = UnityEngine.Debug;
 
 namespace Lib.Async
@@ -32,6 +32,7 @@ namespace Lib.Async
         public void SetResult(T value)
         {
             Task._res = value;
+            BreakInner();
             Task._dispose.Dispose();
             _RoutineBuilder.Next(d => d.AfterSetResult, this);
         }
@@ -39,6 +40,7 @@ namespace Lib.Async
         [UsedImplicitly]
         public void SetException(Exception e)
         {
+            BreakInner();
             Task.PubErr.DisposeWith(e);
             if (!(e is RoutineStoppedException))
             {
@@ -49,6 +51,11 @@ namespace Lib.Async
             _RoutineBuilder.Next(d => d.AfterSetException, e, this);
         }
 
+
+        void BreakInner()
+        {
+            _innerAwaiter?.Break(RoutineStoppedException.Empty);
+        }
 
         [UsedImplicitly]
         public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
@@ -61,7 +68,6 @@ namespace Lib.Async
                     awaiter.OnCompleted(_continuation);
                     _RoutineBuilder.Next(d => d.CurrentAwait, StackTraceHolder.New(3), this);
                     _innerAwaiter = breakableAwaiter;
-                    ReorderBreak();
                     break;
                 case SelfScopeAwaiter selfScopeAwaiter:
                     selfScopeAwaiter.Value = Task.Scope;
@@ -79,18 +85,6 @@ namespace Lib.Async
             }
         }
 
-
-        void ReorderBreak()
-        {
-            if (_cached == null)
-                _cached = () => _innerAwaiter?.Break(RoutineStoppedException.Empty);
-
-            Task.Scope.Unsubscribe(_cached);
-            Task.Scope.OnDispose(_cached);
-        }
-
-        Action _cached;
-        int _count;
 
         [SecuritySafeCritical, UsedImplicitly]
         public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
