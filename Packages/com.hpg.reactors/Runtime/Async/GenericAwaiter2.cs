@@ -16,7 +16,8 @@ namespace Lib.Async
         {
             if (IsCompleted)
                 return;
-            
+            IsCompleted = true;
+
             _dispose.Dispose();
         }
 
@@ -33,16 +34,16 @@ namespace Lib.Async
                 if (IsCompleted)
                     return;
 
-                p.Next();
                 IsCompleted = true;
+                p.Next();
             });
             onNext.OnDispose(() =>
             {
                 if (IsCompleted)
                     return;
 
-                p.Next();
                 IsCompleted = true;
+                p.Next();
                 dispose.Dispose();
             });
 
@@ -58,7 +59,7 @@ namespace Lib.Async
                 IsCompleted = true;
                 return;
             }
-            
+
             scope.OnDispose(() => IsCompleted = true);
 
             var (p, s) = scope.PubSub();
@@ -67,16 +68,16 @@ namespace Lib.Async
                 if (IsCompleted)
                     return;
 
-                p.Next();
                 IsCompleted = true;
+                p.Next();
             });
             onNext.OnNext(() =>
             {
                 if (IsCompleted)
                     return;
-                
-                p.Next();
+
                 IsCompleted = true;
+                p.Next();
                 dispose.Dispose();
             }, scope);
 
@@ -139,7 +140,7 @@ namespace Lib.Async
                     return;
 
                 _result = res;
-                
+
                 p.Next();
                 IsCompleted = true;
                 dispose.Dispose();

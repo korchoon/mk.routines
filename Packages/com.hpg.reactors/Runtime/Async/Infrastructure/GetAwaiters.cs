@@ -17,7 +17,7 @@ namespace Lib.Async
 
             var tt = factory.Invoke(cts.Token);
             var routine = _Inner(tt);
-            routine.Scope(scope).OnDispose(cts.Dispose);
+            routine.GetScope(scope).OnDispose(cts.Dispose);
             return routine;
 
             async Routine _Inner(Task t)

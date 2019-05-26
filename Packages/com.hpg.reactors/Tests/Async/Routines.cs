@@ -33,11 +33,91 @@ namespace AsyncTests.Async
             using (React.Scope(out var scope))
             {
                 var (pub, sub) = scope.PubSub();
-                bool visited = false;
+                var visited = false;
                 Single(() => visited = true, sub);
                 Assert.IsTrue(visited);
             }
         }
-    }
 
+        [Test]
+        public void CompletedAfterFirstSub()
+        {
+            using (React.Scope(out var scope))
+            {
+                var (pub, sub) = scope.PubSub();
+                var aw = Single(() => { }, sub).GetAwaiter();
+                Assert.IsFalse(aw.IsCompleted);
+                pub.Next();
+                Assert.IsTrue(aw.IsCompleted);
+            }
+        }
+
+        [Test]
+        public void Dispose_StopsUsualFlow()
+        {
+            using (React.Scope(out var scope))
+            {
+                var (_, sub) = scope.PubSub();
+
+                var r = Name();
+                r.Dispose();
+
+                async Routine Name()
+                {
+                    await sub;
+                    Assert.Fail("Not invoked");
+                }
+            }
+        }
+
+        [Test]
+        public void AwaiterBreaksRoutine()
+        {
+            using (React.Scope(out var scope))
+            {
+                var (pub, sub) = scope.PubSub();
+                Routine closure = null;
+                var r = Outer();
+                var aw = closure.GetAwaiter();
+                r.Dispose();
+                Assert.IsTrue(aw.IsCompleted);
+
+                async Routine Outer()
+                {
+                    closure = Inner();
+                    await closure;
+                }
+
+                async Routine Inner()
+                {
+                    await sub;
+                }
+            }
+        }
+
+        [Test]
+        public void GetScope_DoesntBreakRoutine()
+        {
+            using (React.Scope(out var scope))
+            {
+                var (pub, sub) = scope.PubSub();
+                Routine closure = null;
+                var r = Outer();
+                var aw = closure.GetAwaiter();
+                r.Dispose();
+                Assert.IsFalse(aw.IsCompleted);
+
+                async Routine Outer()
+                {
+                    closure = Inner();
+                    await closure.GetScope(scope);
+                }
+
+                async Routine Inner()
+                {
+                    await sub;
+                }
+            }
+        }
+    }
 }

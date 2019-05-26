@@ -12,34 +12,27 @@ namespace Lib.Async
     {
         internal (IPub Pub, ISub Sub) Complete { get; }
         (IPub Pub, ISub Sub) BreakInnerFromOuter { get; }
-        internal (IDisposable Pub, IScope Sub) Scope1 { get; }
+        internal (IDisposable Pub, IScope Sub) _scope { get; }
 
-        public IScope GetScope(IScope scope) => Scope(scope);
-
-        public IScope Scope(IScope scope)
+        public IScope GetScope(IScope scope)
         {
             scope.OnDispose(Dispose);
-            return Scope1.Sub;
+            return _scope.Sub;
         }
 
         internal Routine(Action first)
         {
             var p = React.Scope(out var s);
-            Scope1 = (p, s);
-            BreakInnerFromOuter = Scope1.Sub.PubSub();
-            Complete = Scope1.Sub.PubSub();
-            BreakInnerFromOuter.Sub.OnNext(first, Scope1.Sub);
-            BreakInnerFromOuter.Sub.OnNext(Scope1.Pub.Dispose, Scope1.Sub);
-            Complete.Sub.OnNext(Scope1.Pub.Dispose, Scope1.Sub);
+            _scope = (p, s);
+            BreakInnerFromOuter = _scope.Sub.PubSub();
+            Complete = _scope.Sub.PubSub();
+            BreakInnerFromOuter.Sub.OnNext(first, _scope.Sub);
+            BreakInnerFromOuter.Sub.OnNext(_scope.Pub.Dispose, _scope.Sub);
+            Complete.Sub.OnNext(_scope.Pub.Dispose, _scope.Sub);
         }
 
         [UsedImplicitly]
-        public GenericAwaiter2 GetAwaiter()
-        {
-            return new GenericAwaiter2(Complete.Sub, Scope1.Sub, Scope1.Pub);
-//            throw new NotImplementedException();
-//            return new GenericAwaiter((Scope1.Sub, BreakInnerFromOuter.Pub.Next), Complete.Sub);
-        }
+        public GenericAwaiter2 GetAwaiter() => new GenericAwaiter2(Complete.Sub, _scope.Sub, _scope.Pub);
 
         public void Dispose() => BreakInnerFromOuter.Pub.Next();
 

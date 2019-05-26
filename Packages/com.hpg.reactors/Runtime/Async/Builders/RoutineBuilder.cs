@@ -64,7 +64,7 @@ namespace Lib.Async
                     _innerAwaiter = breakableAwaiter;
                     break;
                 case SelfScopeAwaiter selfScopeAwaiter:
-                    selfScopeAwaiter.Value = Task.Scope1.Sub;
+                    selfScopeAwaiter.Value = Task._scope.Sub;
                     awaiter.OnCompleted(_continuation);
                     break;
                 default:
