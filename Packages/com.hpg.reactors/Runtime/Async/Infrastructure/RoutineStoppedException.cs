@@ -8,6 +8,6 @@ namespace Lib.Async
         {
         }
 
-        public static RoutineStoppedException Empty { get; } = new RoutineStoppedException();
+        public static RoutineStoppedException Empty1 { get; } = new RoutineStoppedException();
     }
 }

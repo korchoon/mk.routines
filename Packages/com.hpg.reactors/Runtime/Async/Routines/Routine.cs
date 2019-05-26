@@ -10,57 +10,38 @@ namespace Lib.Async
     [AsyncMethodBuilder(typeof(RoutineBuilder))]
     public sealed class Routine : IDisposable
     {
-        internal IScope _scope;
-        internal IDisposeWith<Exception> StopImmediately;
-        Action _moveAllAwaiters;
-        bool _isCompleted;
-        internal IDisposable PubDispose;
-        IErrorScope<Exception> _onErr;
+        internal (IPub Pub, ISub Sub) Complete { get; }
+        (IPub Pub, ISub Sub) BreakInnerFromOuter { get; }
+        internal (IDisposable Pub, IScope Sub) Scope1 { get; }
 
-        [Obsolete("Use GetScope instead")]
-        public IScope Scope(IScope breakOn) => GetScope(breakOn);
+        public IScope GetScope(IScope scope) => Scope(scope);
 
-        public IScope GetScope(IScope breakOn)
+        public IScope Scope(IScope scope)
         {
-            breakOn.OnDispose(() => StopImmediately.DisposeWith(RoutineStoppedException.Empty));
-            breakOn.OnDispose(PubDispose.Dispose);
-            return _scope;
+            scope.OnDispose(Dispose);
+            return Scope1.Sub;
         }
 
-        internal Routine()
+        internal Routine(Action first)
         {
-            _Routine.Register(this);
-            _Routine.Next(dr => dr.Ctor, StackTraceHolder.New(1), this);
-
-            _moveAllAwaiters = Empty.Action();
-            StopImmediately = new CatchStack(out _onErr);
-            PubDispose = React.Scope(out _scope);
-            _scope.OnDispose(InnerDispose);
-            _onErr.OnDispose(_ => PubDispose.Dispose());
-        }
-
-
-        void InnerDispose()
-        {
-            _isCompleted = true;
-            PubDispose.Dispose();
-            RoutineUtils.MoveNextAndClear(ref _moveAllAwaiters);
-            _Routine.Next(dr => dr.Dispose, this);
-        }
-
-        void IDisposable.Dispose()
-        {
-            StopImmediately.DisposeWith(RoutineStoppedException.Empty);
-            PubDispose.Dispose();
+            var p = React.Scope(out var s);
+            Scope1 = (p, s);
+            BreakInnerFromOuter = Scope1.Sub.PubSub();
+            Complete = Scope1.Sub.PubSub();
+            BreakInnerFromOuter.Sub.OnNext(first, Scope1.Sub);
+            BreakInnerFromOuter.Sub.OnNext(Scope1.Pub.Dispose, Scope1.Sub);
+            Complete.Sub.OnNext(Scope1.Pub.Dispose, Scope1.Sub);
         }
 
         [UsedImplicitly]
-        public Awaiter GetAwaiter()
+        public GenericAwaiter2 GetAwaiter()
         {
-            var res = new Awaiter(this, _onErr, ref _moveAllAwaiters);
-            _Routine.Next(d => d.GetAwaiter, res, this);
-            return res;
+            return new GenericAwaiter2(Complete.Sub, Scope1.Sub, Scope1.Pub);
+//            throw new NotImplementedException();
+//            return new GenericAwaiter((Scope1.Sub, BreakInnerFromOuter.Pub.Next), Complete.Sub);
         }
+
+        public void Dispose() => BreakInnerFromOuter.Pub.Next();
 
         #region Static API
 
@@ -68,83 +49,5 @@ namespace Lib.Async
         public static SelfDispose SelfDispose() => new SelfDispose();
 
         #endregion
-
-        public class Awaiter : ICriticalNotifyCompletion, IBreakableAwaiter
-        {
-            Routine _awaitableTask;
-            Action _continuation;
-            Option<Exception> _exception;
-
-            internal Awaiter(Routine par, IErrorScope<Exception> onErr, ref Action onMoveNext)
-            {
-                _Routine_Awaiter.Register(this);
-                _awaitableTask = par;
-                _continuation = Empty.Action();
-                onErr.OnDispose(_DisposeWith);
-                onMoveNext += () => RoutineUtils.MoveNextAndClear(ref _continuation);
-            }
-
-            void _DisposeWith(Exception err)
-            {
-                _exception = err;
-                RoutineUtils.MoveNextAndClear(ref _continuation);
-            }
-
-            [UsedImplicitly] public bool IsCompleted => _awaitableTask._isCompleted;
-
-            [UsedImplicitly]
-            public void GetResult()
-            {
-                if (_exception.TryGet(out var err))
-                {
-                    if (err is RoutineStoppedException) throw err;
-
-                    throw new Exception("See Inner", err);
-                }
-            }
-
-
-            public void OnCompleted(Action continuation)
-            {
-                if (IsCompleted)
-                {
-                    _Routine_Awaiter.Next(da => da.OnCompleteImmediate, StackTraceHolder.New(1), this);
-                    continuation.Invoke();
-                    return;
-                }
-
-                _Routine_Awaiter.Next(da => da.OnCompleteLater, StackTraceHolder.New(1), this);
-                _continuation = continuation;
-            }
-
-            public void UnsafeOnCompleted(Action continuation) => ((INotifyCompletion) this).OnCompleted(continuation);
-
-            public void Break(Exception e)
-            {
-                if (_exception.HasValue) return;
-                _exception = e;
-                _awaitableTask.StopImmediately.DisposeWith(e);
-                RoutineUtils.MoveNextAndClear(ref _continuation);
-            }
-        }
-
-
-        public class _Routine : DebugTracer<_Routine, Routine>
-        {
-            public Action<StackTraceHolder> Ctor;
-            public Action Dispose;
-            public Action<IScope> SubscribeToScope;
-            public Action<IScope> SetScope;
-            public Action<Awaiter> GetAwaiter;
-        }
-
-        public class _Routine_Awaiter : DebugTracer<_Routine_Awaiter, Awaiter>
-        {
-            public Action AfterBreak;
-            public Action GetResult;
-            public Action<Exception> Thrown;
-            public Action<StackTraceHolder> OnCompleteImmediate;
-            public Action<StackTraceHolder> OnCompleteLater;
-        }
     }
 }

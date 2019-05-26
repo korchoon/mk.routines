@@ -5,50 +5,30 @@ using Lib.Utility;
 
 namespace Lib.Async
 {
-    public class ScopeAwaiter : ICriticalNotifyCompletion, IBreakableAwaiter
+#if M_DISABLED
+     public class ScopeAwaiter : ICriticalNotifyCompletion, IBreakableAwaiter
     {
-        Action _continuation;
-        Option<Exception> _exception;
+        IDisposable _dipose;
+        public IScope InnerTree { get; }
 
         public ScopeAwaiter(IScope scope)
         {
-            _continuation = Empty.Action();
-            scope.OnDispose(Dispose);
+            _dipose = scope.Scope(out var tmp);
+            InnerTree = tmp;
         }
 
-        public bool IsCompleted { get; private set; }
+        public bool IsCompleted => InnerTree.Completed;
 
         public void GetResult()
         {
-            if (_exception.TryGet(out var e)) throw e;
         }
 
-        public void UnsafeOnCompleted(Action moveNext)
-        {
-            if (IsCompleted)
-            {
-                moveNext.Invoke(); // todo
-                return;
-            }
-
-            _continuation = moveNext;
-        }
+        public void UnsafeOnCompleted(Action moveNext) => InnerTree.OnDispose(moveNext);
 
 
         void INotifyCompletion.OnCompleted(Action continuation) => UnsafeOnCompleted(continuation);
 
-        public void Break(Exception e)
-        {
-            if (_exception.HasValue) return;
-
-            _exception = e;
-            Dispose();
-        }
-
-        void Dispose()
-        {
-            IsCompleted = true;
-            RoutineUtils.MoveNextAndClear(ref _continuation);
-        }
+        public void Break() => _dipose.Dispose();
     }
+#endif
 }

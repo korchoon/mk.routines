@@ -63,11 +63,11 @@ namespace Lib
             ISub<T> DynamicMethod()
             {
                 var routine = callback.Invoke();
-                var (p, s) = React.PubSub<T>(scope);
+                var (p, s) = scope.PubSub<T>();
 
-                scope.OnDispose(routine._dispose.Dispose);
+                scope.OnDispose(routine.BreakInnerFromOuter.Pub.Next);
                 var aw = routine.GetAwaiter();
-                routine.Scope.OnDispose(() =>
+                routine.Scope.Sub.OnDispose(() =>
                 {
                     try
                     {

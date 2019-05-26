@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Lib.Utility;
 using UnityEngine;
 using UnityEngine.Assertions;
+
+[assembly: InternalsVisibleTo("Lib.Reactrors.Tests")]
 
 namespace Utility.Asserts
 {
@@ -73,7 +76,7 @@ namespace Utility.Asserts
             Fail(msg, msg);
         }
 
-        class AssertException : Exception
+        internal class AssertException : Exception
         {
             public AssertException(string msg, string userMsg = null) : base(msg) //todo userMsg
             {

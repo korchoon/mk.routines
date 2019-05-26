@@ -14,47 +14,44 @@ namespace Lib.Async
     {
         Action _continuation;
         IBreakableAwaiter _innerAwaiter;
+        [UsedImplicitly] public Routine<T> Task { get; private set; }
 
         RoutineBuilder()
         {
-            _RoutineBuilder.Register(this);
-            _RoutineBuilder.Next(trc => trc.CtorTrace, StackTraceHolder.New(3), this);
-            Task = new Routine<T>();
+            Task = new Routine<T>(BreakCurrent);
+
+            void BreakCurrent()
+            {
+                var i = _innerAwaiter;
+                _innerAwaiter = null;
+                i?.BreakInner();
+            }
         }
 
         [UsedImplicitly]
         public static RoutineBuilder<T> Create() => new RoutineBuilder<T>();
 
-        [UsedImplicitly] public Routine<T> Task { get; }
-
 
         [UsedImplicitly]
-        public void SetResult(T value)
+        public void Start<TStateMachine>(ref TStateMachine stateMachine)
+            where TStateMachine : IAsyncStateMachine
         {
-            Task._res = value;
-            BreakInner();
-            Task._dispose.Dispose();
-            _RoutineBuilder.Next(d => d.AfterSetResult, this);
+            _continuation = stateMachine.MoveNext;
+            _continuation.Invoke();
+        }
+
+        [UsedImplicitly]
+        public void SetResult(T msg)
+        {
+            Task.Complete2.Pub.Next(msg);
         }
 
         [UsedImplicitly]
         public void SetException(Exception e)
         {
-            BreakInner();
-            Task.PubErr.DisposeWith(e);
-            if (!(e is RoutineStoppedException))
-            {
-                Debug.LogException(e);
-                SchPub.PubError.Next(e);
-            }
-
-            _RoutineBuilder.Next(d => d.AfterSetException, e, this);
-        }
-
-
-        void BreakInner()
-        {
-            _innerAwaiter?.Break(RoutineStoppedException.Empty);
+            Debug.LogException(e);
+            SchPub.PubError.Next(e);
+            Task.Complete.Pub.Next();
         }
 
         [UsedImplicitly]
@@ -66,17 +63,10 @@ namespace Lib.Async
             {
                 case IBreakableAwaiter breakableAwaiter:
                     awaiter.OnCompleted(_continuation);
-                    _RoutineBuilder.Next(d => d.CurrentAwait, StackTraceHolder.New(3), this);
                     _innerAwaiter = breakableAwaiter;
                     break;
                 case SelfScopeAwaiter selfScopeAwaiter:
-                    selfScopeAwaiter.Value = Task.Scope;
-                    Asr.IsNotNull(Task.Scope);
-                    awaiter.OnCompleted(_continuation);
-                    break;
-                case SelfDisposeAwaiter selfDisposeAwaiter:
-                    selfDisposeAwaiter.Value = Task._dispose;
-                    Asr.IsNotNull(Task._dispose);
+                    selfScopeAwaiter.Value = Task.Scope.Sub;
                     awaiter.OnCompleted(_continuation);
                     break;
                 default:
@@ -90,14 +80,6 @@ namespace Lib.Async
         public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
             where TAwaiter : ICriticalNotifyCompletion where TStateMachine : IAsyncStateMachine =>
             AwaitOnCompleted(ref awaiter, ref stateMachine);
-
-        [UsedImplicitly]
-        public void Start<TStateMachine>(ref TStateMachine stateMachine)
-            where TStateMachine : IAsyncStateMachine
-        {
-            _continuation = stateMachine.MoveNext;
-            _continuation.Invoke();
-        }
 
 
         [UsedImplicitly]

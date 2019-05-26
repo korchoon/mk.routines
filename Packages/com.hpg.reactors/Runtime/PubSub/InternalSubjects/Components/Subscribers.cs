@@ -100,7 +100,6 @@ namespace Lib.DataFlow
     }
 
 
-    [NonPerformant(PerfKind.GC)]
     internal sealed class Subscribers<T> : IPub<T>
     {
         struct Item

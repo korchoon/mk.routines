@@ -36,8 +36,8 @@ namespace Lib.Async
 
             var tt = factory.Invoke(cts.Token);
             var routine = _Inner(tt);
-            routine._dispose.DisposeOn(scope);
-            routine.Scope.OnDispose(cts.Dispose);
+            scope.OnDispose(() => routine.BreakInnerFromOuter.Pub.Next());
+            routine.Scope.Sub.OnDispose(cts.Dispose);
             return routine;
 
             async Routine<T> _Inner(Task<T> t)
@@ -50,21 +50,36 @@ namespace Lib.Async
             }
         }
 
-        public static SubAwaiter<T> GetAwaiter<T>(this ISub<T> s) => new SubAwaiter<T>(s);
-
-        public static SubAwaiter GetAwaiter(this ISub aw)
+        public static GenericAwaiter<T> GetAwaiter<T>(this ISub<T> s)
         {
-            var res = SubAwaiter.New();
-            aw.OnNextOnce(res._Dispose);
-            return res;
+            var disp = React.Scope(out var subscope);
+            s.OnNext(_ => disp.Dispose(), subscope);
+            throw new NotImplementedException();
+
+//            return new GenericAwaiter<T>((subscope, disp.Dispose), s);
         }
 
-        public static ScopeAwaiter GetAwaiter(this IScope aw) => new ScopeAwaiter(aw);
+        public static GenericAwaiter GetAwaiter(this ISub aw)
+        {
+            var disp = React.Scope(out var scope);
+            aw.OnNext(disp.Dispose, scope);
+            throw new NotImplementedException();
 
-        public static ScopeAwaiter GetAwaiter(this float sec) => Delay(sec, DefaultSch).GetAwaiter();
+//            return new GenericAwaiter((scope, disp.Dispose), aw);
+        }
 
-        public static ScopeAwaiter GetAwaiter(this int sec) => GetAwaiter((float) sec);
-        public static ScopeAwaiter GetAwaiter(this double sec) => GetAwaiter((float) sec);
+        public static GenericAwaiter GetAwaiter(this IScope aw)
+        {
+            var disp = aw.Scope(out var subscope);
+            throw new NotImplementedException();
+
+//            return new GenericAwaiter((subscope, disp.Dispose), DefaultSch);
+        }
+
+        public static GenericAwaiter GetAwaiter(this float sec) => Delay(sec, DefaultSch).GetAwaiter();
+
+        public static GenericAwaiter GetAwaiter(this int sec) => GetAwaiter((float) sec);
+        public static GenericAwaiter GetAwaiter(this double sec) => GetAwaiter((float) sec);
 
 
         public static IScope Delay(float seconds, ISub s)

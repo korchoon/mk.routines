@@ -77,7 +77,7 @@ namespace Lib.DataFlow
             });
         }
 
-        [Button(ButtonSizes.Small), HorizontalGroup("1")]
+        [Button(), HorizontalGroup("1")]
         void StackTrace()
         {
             if (!_cache.TryGetValue(_id, out var trace))

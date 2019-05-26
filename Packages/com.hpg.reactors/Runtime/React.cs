@@ -1,6 +1,7 @@
 using System;
 using JetBrains.Annotations;
 using Lib.DataFlow;
+using Utility.Asserts;
 
 namespace Lib
 {
@@ -9,6 +10,7 @@ namespace Lib
         [MustUseReturnValue]
         public static (IPub pub, ISub sub) PubSub(this IScope scope)
         {
+            Asr.IsFalse(scope.Completed);
             var subject = new Subject(scope);
             return (subject, subject);
         }

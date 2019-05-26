@@ -18,7 +18,7 @@ namespace Lib.Async
 
         public static ISub<Exception> OnError { get; internal set; }
         public static ISub Update { get; internal set; }
-        public static IScope Scope { get; internal set; }
+        internal static IScope Scope { get; set; }
 
         #endregion
 

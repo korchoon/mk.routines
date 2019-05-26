@@ -6,7 +6,6 @@ using Utility.Asserts;
 
 namespace Lib.DataFlow
 {
-    [NonPerformant(PerfKind.GC)]
     internal class Subject<T> : ISub<T>, IPub<T>
     {
         Subscribers<T> _next;
@@ -17,6 +16,7 @@ namespace Lib.DataFlow
 
         public Subject(IScope scope)
         {
+            Asr.IsFalse(scope.Completed);
             scope.OnDispose(_Dispose);
             _next = NextPool.Get();
         }
@@ -32,9 +32,12 @@ namespace Lib.DataFlow
 
         public void OnNext(Action<T> pub, IScope scope)
         {
-            Asr.IsFalse(Completed);
             if (Completed)
+            {
+                Asr.Fail("Tried to subscribe to ISub which is completed");
                 return;
+            }
+            Asr.IsFalse(scope.Completed);
 
             _next.Sub(pub, scope);
         }
@@ -42,8 +45,11 @@ namespace Lib.DataFlow
 
         public void Next(T msg)
         {
-            Asr.IsFalse(Completed);
-            if (Completed) return;
+            if (Completed)
+            {
+                Asr.Fail("Tried to publish Next to IPub which is completed");
+                return;
+            }
 
             _next.Next(msg);
         }
@@ -57,6 +63,8 @@ namespace Lib.DataFlow
 
         public Subject(IScope scope)
         {
+            Asr.IsFalse(scope.Completed);
+            
             scope.OnDispose(_Dispose);
             _next = NextPool.Get();
         }
@@ -72,18 +80,25 @@ namespace Lib.DataFlow
 
         public void OnNext(Action pub, IScope scope)
         {
-            Asr.IsFalse(Completed);
             if (Completed)
+            {
+                Asr.Fail("Tried to subscribe to ISub which is completed");
                 return;
+            }
 
+            Asr.IsFalse(scope.Completed);
+            
             _next.Sub(pub, scope);
         }
 
 
         public void Next()
         {
-            Asr.IsFalse(Completed);
-            if (Completed) return;
+            if (Completed)
+            {
+                Asr.Fail("Tried to publish Next to IPub which is completed");
+                return;
+            }
 
             _next.Next();
         }
