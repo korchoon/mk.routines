@@ -15,14 +15,15 @@ namespace Lib.Async
         Action _continuation;
         IBreakableAwaiter _innerAwaiter;
 
-        [UsedImplicitly] public Routine<T> Task { get; private set; }
+        [UsedImplicitly] public Routine<T> Task { get; }
 
         RoutineBuilder()
         {
-            Task = new Routine<T>(this);
+            Task = new Routine<T>();
+            Task.Scope.OnDispose(BreakCurrent);
         }
 
-        internal void BreakCurrent()
+        void BreakCurrent()
         {
             var i = _innerAwaiter;
             _innerAwaiter = null;
@@ -47,11 +48,11 @@ namespace Lib.Async
         [UsedImplicitly]
         public void SetResult(T value)
         {
-            Task.SetResult(value);
-            if (Task._scope.Sub.Completed)
+            if (Task.Scope.Completed)
                 return;
 
-            Task.Complete.Pub.Next();
+            Task.SetResult(value);
+            Task.Complete.Next();
         }
 
         [UsedImplicitly]
@@ -59,7 +60,7 @@ namespace Lib.Async
         {
             Debug.LogException(e);
             SchPub.PubError.Next(e);
-            Task.Complete.Pub.Next();
+            Task.Complete.Next();
         }
 
         [UsedImplicitly]
@@ -74,7 +75,7 @@ namespace Lib.Async
                     awaiter.OnCompleted(_continuation);
                     break;
                 case SelfScopeAwaiter selfScopeAwaiter:
-                    selfScopeAwaiter.Value = Task._scope.Sub;
+                    selfScopeAwaiter.Value = Task.Scope;
                     awaiter.OnCompleted(_continuation);
                     break;
                 default:
@@ -91,9 +92,6 @@ namespace Lib.Async
 
 
         [UsedImplicitly]
-        public void SetStateMachine(IAsyncStateMachine stateMachine)
-        {
-            _continuation = stateMachine.MoveNext;
-        }
+        public void SetStateMachine(IAsyncStateMachine stateMachine) => _continuation = stateMachine.MoveNext;
     }
 }

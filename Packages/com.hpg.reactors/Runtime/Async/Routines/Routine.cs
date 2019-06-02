@@ -11,44 +11,35 @@ namespace Lib.Async
     [AsyncMethodBuilder(typeof(RoutineBuilder))]
     public sealed class Routine : IDisposable
     {
-        RoutineBuilder _builder;
+        internal IPub Complete;
+        ISub _onComplete;
 
-        internal (IPub Pub, ISub Sub) Complete { get; }
-        internal (IDisposable Pub, IScope Sub) _scope { get; }
+        internal IScope Scope;
+        IDisposable _pubScope;
 
         public IScope GetScope(IScope scope)
         {
             scope.OnDispose(Dispose);
-            return _scope.Sub;
+            return Scope;
         }
 
-        internal Routine(RoutineBuilder builder)
+        internal Routine()
         {
-            _builder = builder;
-            var disposable = React.Scope(out var scope);
-            _scope = (disposable, scope);
-
-            Complete = scope.PubSub();
-
-            Complete.Sub.OnNext(_scope.Pub.Dispose, scope);
+            _pubScope = React.Scope(out Scope);
+            (Complete, _onComplete) = Scope.PubSub();
+            _onComplete.OnNext(Dispose, Scope);
         }
-
 
         [UsedImplicitly]
         public GenericAwaiter2 GetAwaiter()
         {
-            if (!_scope.Sub.Completed)
-                Complete.Sub.OnNext(Dispose, _scope.Sub);
+            if (!Scope.Completed)
+                _onComplete.OnNext(Dispose, Scope);
 
-            var res = new GenericAwaiter2(_scope.Sub, Dispose);
-            return res;
+            return new GenericAwaiter2(Scope, Dispose);
         }
 
-        public void Dispose()
-        {
-            _builder.BreakCurrent();
-            _scope.Pub.Dispose();
-        }
+        public void Dispose() => _pubScope.Dispose();
 
         #region Static API
 

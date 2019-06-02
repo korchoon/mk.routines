@@ -82,10 +82,6 @@ namespace Lib.Async
         public void OnCompleted(Action continuation) => _aw.OnCompleted(continuation);
         public void UnsafeOnCompleted(Action continuation) => _aw.UnsafeOnCompleted(continuation);
         public void BreakInner() => _aw.BreakInner();
-
-        public void Unsub()
-        {
-            _aw.Unsub();
-        }
+        public void Unsub() => _aw.Unsub();
     }
 }

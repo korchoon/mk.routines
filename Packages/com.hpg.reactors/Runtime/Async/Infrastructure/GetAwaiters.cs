@@ -31,15 +31,14 @@ namespace Lib.Async
             }
         }
 
-#if M_DISABLED
          public static Routine<T> Convert<T>(Func<CancellationToken, Task<T>> factory, IScope scope)
         {
             var cts = new CancellationTokenSource();
 
             var tt = factory.Invoke(cts.Token);
             var routine = _Inner(tt);
-            scope.OnDispose(() => routine.BreakInnerFromOuter.Pub.Next());
-            routine.Scope.Sub.OnDispose(cts.Dispose);
+            scope.OnDispose(() => routine.Dispose());
+            routine.Scope.OnDispose(cts.Dispose);
             return routine;
 
             async Routine<T> _Inner(Task<T> t)
@@ -51,7 +50,6 @@ namespace Lib.Async
                 return aw.GetResult();
             }
         }
-#endif
 
         public static GenericAwaiter2<T> GetAwaiter<T>(this ISub<T> s)
         {
@@ -60,7 +58,7 @@ namespace Lib.Async
             bool done = false;
             s.OnNext(Maybe, scope);
             var res1 = new GenericAwaiter2(scope, () => done = true);
-            var res = new GenericAwaiter2<T>(res1, result.GetOrFail);
+            var res = new GenericAwaiter2<T>(res1, () => result.GetOrFail());
             return res;
 
             void Maybe(T msg)

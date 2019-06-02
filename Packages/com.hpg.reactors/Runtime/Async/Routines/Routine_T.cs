@@ -13,52 +13,41 @@ using Debug = UnityEngine.Debug;
 namespace Lib.Async
 {
     [AsyncMethodBuilder(typeof(RoutineBuilder<>))]
-    public sealed class Routine<T>
+    public sealed class Routine<T> : IDisposable
     {
-        RoutineBuilder<T> _builder;
-
-        internal (IPub Pub, ISub Sub) Complete { get; }
-
+        internal IPub Complete;
+        ISub _onComplete;
+        
+        internal IScope Scope;
+        IDisposable _pubScope;
+        
         Option<T> _result;
 
-        internal void SetResult(T res)
-        {
-            _result = res;
-        }
-
-        internal (IDisposable Pub, IScope Sub) _scope { get; }
+        internal void SetResult(T res) => _result = res;
 
         public IScope GetScope(IScope scope)
         {
             scope.OnDispose(Dispose);
-            return _scope.Sub;
+            return Scope;
         }
 
-        internal Routine(RoutineBuilder<T> builder)
+        internal Routine()
         {
-            _builder = builder;
-            var disposable = React.Scope(out var scope);
-            _scope = (disposable, scope);
-
-            Complete = scope.PubSub();
-
-            Complete.Sub.OnNext(_scope.Pub.Dispose, scope);
+            _pubScope = React.Scope(out Scope);
+            (Complete, _onComplete) = Scope.PubSub();
+            _onComplete.OnNext(Dispose, Scope);
         }
-
 
         [UsedImplicitly]
         public GenericAwaiter2<T> GetAwaiter()
         {
-            if (!_scope.Sub.Completed)
-                Complete.Sub.OnNext(Dispose, _scope.Sub);
-            var aw = new GenericAwaiter2(_scope.Sub, Dispose);
+            if (!Scope.Completed)
+                _onComplete.OnNext(Dispose, Scope);
+
+            var aw = new GenericAwaiter2(Scope, Dispose);
             return new GenericAwaiter2<T>(aw, () => _result.GetOrFail());
         }
 
-        public void Dispose()
-        {
-            _scope.Pub.Dispose();
-            _builder.BreakCurrent();
-        }
+        public void Dispose() => _pubScope.Dispose();
     }
 }

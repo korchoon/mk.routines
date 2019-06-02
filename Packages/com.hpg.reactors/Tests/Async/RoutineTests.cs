@@ -16,7 +16,7 @@ namespace AsyncTests.Async
             var routine = Empty();
             var aw = routine.GetAwaiter();
             Assert.IsTrue(aw.IsCompleted);
-            
+
             async Routine Empty()
             {
             }
@@ -130,7 +130,29 @@ namespace AsyncTests.Async
                 }
             }
         }
-        
+
+        [Test]
+        public void SelfScope_Await()
+        {
+            var flag = false;
+            var s = Sample();
+            Assert.IsTrue(flag);
+
+            var aw = s.GetAwaiter();
+            Assert.IsFalse(aw.IsCompleted);
+            
+            s.Dispose();
+            Assert.IsTrue(aw.IsCompleted);
+
+            async Routine Sample()
+            {
+                var scope = await Routine.SelfScope();
+                flag = true;
+
+                await scope;
+            }
+        }
+
         [Test]
         public void GetScope_Disposed_TODO()
         {
