@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using Lib.Async.Debugger;
 using Lib.DataFlow;
 using Lib.Utility;
 
@@ -9,83 +10,39 @@ namespace Lib.Async
     public class GenericAwaiter2 : ICriticalNotifyCompletion, IBreakableAwaiter
     {
         readonly IScope _scope;
-        readonly IDisposable _dispose;
+        readonly Action _break;
         ISub _continuations;
+        Action _continuation;
+        Action _unsub;
 
         public void BreakInner()
         {
-            if (IsCompleted)
-                return;
-            IsCompleted = true;
-
-            _dispose.Dispose();
+            _break.Invoke();
         }
 
-        public GenericAwaiter2(IScope onNext, IScope scope, IDisposable dispose)
+        public void Unsub()
         {
-            _scope = scope;
-            _dispose = dispose;
-
-            scope.OnDispose(() => IsCompleted = true);
-
-            var (p, s) = scope.PubSub();
-            scope.OnDispose(() =>
-            {
-                if (IsCompleted)
-                    return;
-
-                IsCompleted = true;
-                p.Next();
-            });
-            onNext.OnDispose(() =>
-            {
-                if (IsCompleted)
-                    return;
-
-                IsCompleted = true;
-                p.Next();
-                dispose.Dispose();
-            });
-
-            _continuations = s;
+            _unsub.Invoke();
         }
 
-        public GenericAwaiter2(ISub onNext, IScope scope, IDisposable dispose)
+        public GenericAwaiter2(IScope scope, Action onBreakInner)
         {
             _scope = scope;
-            _dispose = dispose;
-            if (scope.Completed)
+            if (_scope.Completed)
             {
-                IsCompleted = true;
+                _unsub = Empty.Action();
                 return;
             }
 
-            scope.OnDispose(() => IsCompleted = true);
+            _break = onBreakInner;
 
-            var (p, s) = scope.PubSub();
-            scope.OnDispose(() =>
-            {
-                if (IsCompleted)
-                    return;
-
-                IsCompleted = true;
-                p.Next();
-            });
-            onNext.OnNext(() =>
-            {
-                if (IsCompleted)
-                    return;
-
-                IsCompleted = true;
-                p.Next();
-                dispose.Dispose();
-            }, scope);
-
+            var (p, s) = _scope.PubSub();
+            _scope.OnDispose(p.Next);
             _continuations = s;
+            _unsub = () => _scope.Unsubscribe(p.Next);
         }
 
-
-        [UsedImplicitly] public bool IsCompleted { get; private set; }
+        [UsedImplicitly] public bool IsCompleted => _scope.Completed;
 
         [UsedImplicitly]
         public void GetResult()
@@ -108,68 +65,27 @@ namespace Lib.Async
 
     public class GenericAwaiter2<T> : ICriticalNotifyCompletion, IBreakableAwaiter
     {
-        readonly IScope _scope;
-        readonly IDisposable _dispose;
-        ISub _continuations;
-        Option<T> _result;
+        readonly GenericAwaiter2 _aw;
+        Func<T> _getResult;
 
-        public void BreakInner()
+        public GenericAwaiter2(GenericAwaiter2 aw, Func<T> getResult)
         {
-            _dispose.Dispose();
+            _aw = aw;
+            _getResult = getResult;
         }
-
-        public GenericAwaiter2(ISub<T> onNext, IScope scope, IDisposable dispose)
-        {
-            _scope = scope;
-            _dispose = dispose;
-
-            scope.OnDispose(() => IsCompleted = true);
-
-            var (p, s) = scope.PubSub();
-            scope.OnDispose(() =>
-            {
-                if (IsCompleted)
-                    return;
-
-                p.Next();
-                IsCompleted = true;
-            });
-            onNext.OnNext(res =>
-            {
-                if (IsCompleted)
-                    return;
-
-                _result = res;
-
-                p.Next();
-                IsCompleted = true;
-                dispose.Dispose();
-            }, scope);
-
-            _continuations = s;
-        }
-
-
-        [UsedImplicitly] public bool IsCompleted { get; private set; }
 
         [UsedImplicitly]
-        public T GetResult()
+        public T GetResult() => _getResult.Invoke();
+
+        [UsedImplicitly] public bool IsCompleted => _aw.IsCompleted;
+
+        public void OnCompleted(Action continuation) => _aw.OnCompleted(continuation);
+        public void UnsafeOnCompleted(Action continuation) => _aw.UnsafeOnCompleted(continuation);
+        public void BreakInner() => _aw.BreakInner();
+
+        public void Unsub()
         {
-            _result.GetOrFail(out var res);
-            return res;
+            _aw.Unsub();
         }
-
-        public void OnCompleted(Action continuation)
-        {
-            if (IsCompleted)
-            {
-                continuation.Invoke();
-                return;
-            }
-
-            _continuations.OnNext(continuation, _scope);
-        }
-
-        public void UnsafeOnCompleted(Action continuation) => OnCompleted(continuation);
     }
 }

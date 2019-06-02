@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lib.DataFlow;
 using Lib.Timers;
+using Lib.Utility;
 using UnityEngine;
 
 namespace Lib.Async
@@ -30,7 +31,8 @@ namespace Lib.Async
             }
         }
 
-        public static Routine<T> Convert<T>(Func<CancellationToken, Task<T>> factory, IScope scope)
+#if M_DISABLED
+         public static Routine<T> Convert<T>(Func<CancellationToken, Task<T>> factory, IScope scope)
         {
             var cts = new CancellationTokenSource();
 
@@ -49,25 +51,56 @@ namespace Lib.Async
                 return aw.GetResult();
             }
         }
+#endif
 
         public static GenericAwaiter2<T> GetAwaiter<T>(this ISub<T> s)
         {
+            var result = new Option<T>();
             var d = React.Scope(out var scope);
-            return new GenericAwaiter2<T>(s, scope, d);
+            bool done = false;
+            s.OnNext(Maybe, scope);
+            var res1 = new GenericAwaiter2(scope, () => done = true);
+            var res = new GenericAwaiter2<T>(res1, result.GetOrFail);
+            return res;
+
+            void Maybe(T msg)
+            {
+                result = msg;
+                if (done) return;
+                d.Dispose();
+            }
         }
 
         public static GenericAwaiter2 GetAwaiter(this ISub aw)
         {
             var d = React.Scope(out var scope);
-            aw.OnNext(d.Dispose, scope);
-            return new GenericAwaiter2(aw, scope, d);
+
+            bool done = false;
+            aw.OnNext(Maybe, scope);
+            var res = new GenericAwaiter2(scope, () => done = true);
+            return res;
+
+            void Maybe()
+            {
+                if (done) return;
+                d.Dispose();
+            }
         }
 
-        public static GenericAwaiter2 GetAwaiter(this IScope aw)
+        public static GenericAwaiter2 GetAwaiter(this IScope outer)
         {
             var d = React.Scope(out var scope);
-            aw.OnDispose(d.Dispose);
-            return new GenericAwaiter2(aw, scope, d);
+            var (pub, sub) = outer.PubSub();
+            outer.OnDispose(() =>
+            {
+                if (scope.Completed)
+                    return;
+                pub.Next();
+                d.Dispose();
+            });
+
+            sub.OnNext(d.Dispose, outer);
+            return new GenericAwaiter2(scope, d.Dispose);
         }
 
         public static GenericAwaiter2 GetAwaiter(this float sec) => Delay(sec, DefaultSch).GetAwaiter();

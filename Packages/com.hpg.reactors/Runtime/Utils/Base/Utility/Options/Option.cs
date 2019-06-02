@@ -13,11 +13,9 @@ namespace Lib.Utility
         // ReSharper disable once StaticMemberInGenericType
         internal static readonly bool IsValueType;
 
-        [OdinSerialize, SerializeField]
-        public bool HasValue { get; private set; }
+        [OdinSerialize, SerializeField] public bool HasValue { get; private set; }
 
-        [OdinSerialize,  SerializeField]
-        T Value { get; set; }
+        [OdinSerialize, SerializeField] T Value { get; set; }
 
         public static implicit operator Option<T>(T arg)
         {
@@ -29,7 +27,7 @@ namespace Lib.Utility
                 Warn.Warning($"{arg} has default value");
             }
 #endif
-            
+
             return Option.Some(arg);
         }
 
@@ -42,6 +40,13 @@ namespace Lib.Utility
         {
             if (!TryGet(out value))
                 Asr.Fail($"Option<{typeof(T).Name}> has no value");
+        }
+
+        public T GetOrFail()
+        {
+            if (!TryGet(out var value))
+                Asr.Fail($"Option<{typeof(T).Name}> has no value");
+            return value;
         }
 
         public bool TryGet(out T value)

@@ -15,7 +15,8 @@ namespace AsyncTests.Async
             var d = React.Scope(out var scope);
             var (next, onNext) = scope.PubSub();
 
-            var awaiter = new GenericAwaiter2(onNext, scope, d);
+            onNext.OnNext(d.Dispose, scope);
+            var awaiter = new GenericAwaiter2(scope, d.Dispose);
             res = (awaiter, next.Next);
             return d;
         }

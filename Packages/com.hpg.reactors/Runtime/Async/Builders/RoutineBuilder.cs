@@ -12,18 +12,22 @@ namespace Lib.Async
     {
         Action _continuation;
         IBreakableAwaiter _innerAwaiter;
+
         [UsedImplicitly] public Routine Task { get; private set; }
 
         RoutineBuilder()
         {
-            Task = new Routine(BreakCurrent);
+            Task = new Routine(this);
+        }
 
-            void BreakCurrent()
-            {
-                var i = _innerAwaiter;
-                _innerAwaiter = null;
-                i?.BreakInner();
-            }
+        internal void BreakCurrent()
+        {
+            var i = _innerAwaiter;
+            _innerAwaiter = null;
+            if (i == null) return;
+
+            i.Unsub();
+            i.BreakInner();
         }
 
         [UsedImplicitly]
@@ -41,6 +45,8 @@ namespace Lib.Async
         [UsedImplicitly]
         public void SetResult()
         {
+            if (Task._scope.Sub.Completed)
+                return;
             Task.Complete.Pub.Next();
         }
 
@@ -60,8 +66,8 @@ namespace Lib.Async
             switch (awaiter)
             {
                 case IBreakableAwaiter breakableAwaiter:
-                    awaiter.OnCompleted(_continuation);
                     _innerAwaiter = breakableAwaiter;
+                    awaiter.OnCompleted(_continuation);
                     break;
                 case SelfScopeAwaiter selfScopeAwaiter:
                     selfScopeAwaiter.Value = Task._scope.Sub;

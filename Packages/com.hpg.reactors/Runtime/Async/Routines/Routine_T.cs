@@ -15,31 +15,50 @@ namespace Lib.Async
     [AsyncMethodBuilder(typeof(RoutineBuilder<>))]
     public sealed class Routine<T>
     {
+        RoutineBuilder<T> _builder;
+
         internal (IPub Pub, ISub Sub) Complete { get; }
-        internal (IPub<T> Pub, ISub<T> Sub) Complete2 { get; }
-        internal (IPub Pub, ISub Sub) BreakInnerFromOuter { get; }
-        internal (IDisposable Pub, IScope Sub) Scope { get; }
 
+        Option<T> _result;
 
-        internal Routine(Action first)
+        internal void SetResult(T res)
         {
-            var p = React.Scope(out var s);
-            Scope = (p, s);
-            BreakInnerFromOuter = Scope.Sub.PubSub();
-            Complete2 = Scope.Sub.PubSub<T>();
-            Complete = Scope.Sub.PubSub();
-            BreakInnerFromOuter.Sub.OnNext(first, Scope.Sub);
-            BreakInnerFromOuter.Sub.OnNext(Scope.Pub.Dispose, Scope.Sub);
-
-            Complete.Sub.OnNext(Scope.Pub.Dispose, Scope.Sub);
-            Complete2.Sub.OnNext(_ => Complete.Pub.Next(), Scope.Sub);
+            _result = res;
         }
 
-        [UsedImplicitly]
-        public GenericAwaiter<T> GetAwaiter()
+        internal (IDisposable Pub, IScope Sub) _scope { get; }
+
+        public IScope GetScope(IScope scope)
         {
-            throw new NotImplementedException();
-//            return new GenericAwaiter<T>((Scope.Sub, BreakInnerFromOuter.Pub.Next), Complete2.Sub);
+            scope.OnDispose(Dispose);
+            return _scope.Sub;
+        }
+
+        internal Routine(RoutineBuilder<T> builder)
+        {
+            _builder = builder;
+            var disposable = React.Scope(out var scope);
+            _scope = (disposable, scope);
+
+            Complete = scope.PubSub();
+
+            Complete.Sub.OnNext(_scope.Pub.Dispose, scope);
+        }
+
+
+        [UsedImplicitly]
+        public GenericAwaiter2<T> GetAwaiter()
+        {
+            if (!_scope.Sub.Completed)
+                Complete.Sub.OnNext(Dispose, _scope.Sub);
+            var aw = new GenericAwaiter2(_scope.Sub, Dispose);
+            return new GenericAwaiter2<T>(aw, () => _result.GetOrFail());
+        }
+
+        public void Dispose()
+        {
+            _scope.Pub.Dispose();
+            _builder.BreakCurrent();
         }
     }
 }

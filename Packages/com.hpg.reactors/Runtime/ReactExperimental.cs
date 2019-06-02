@@ -55,7 +55,7 @@ namespace Lib
             var scopeAwaiter = sec.GetAwaiter();
             scopeAwaiter.UnsafeOnCompleted(continuation);
         }
-
+#if M_DISABLED
         public static Func<ISub<T>> FromRoutine<T>(this Func<Routine<T>> callback, IScope scope)
         {
             return DynamicMethod;
@@ -82,6 +82,7 @@ namespace Lib
                 return s;
             }
         }
+#endif
 
         [MustUseReturnValue]
         public static (IDisposable disposable, IScope scope) ScopeTuple()

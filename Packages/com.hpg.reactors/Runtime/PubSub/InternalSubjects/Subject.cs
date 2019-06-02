@@ -1,5 +1,6 @@
 ﻿using System;
 using Lib.Async;
+using Lib.Async.Debugger;
 using Lib.Attributes;
 using Lib.Pooling;
 using Utility.Asserts;
@@ -16,6 +17,7 @@ namespace Lib.DataFlow
 
         public Subject(IScope scope)
         {
+            _Subject<T>.Register(this, StackTraceHolder.New(3).GetName(false));
             Asr.IsFalse(scope.Completed);
             scope.OnDispose(_Dispose);
             _next = NextPool.Get();
@@ -27,6 +29,7 @@ namespace Lib.DataFlow
 
             _next.Dispose();
 
+            _Subject<T>.Next(s => s.Dispose, StackTraceHolder.New(1).GetName(false), this);
             NextPool.Release(ref _next);
         }
 
@@ -37,7 +40,9 @@ namespace Lib.DataFlow
                 Asr.Fail("Tried to subscribe to ISub which is completed");
                 return;
             }
+
             Asr.IsFalse(scope.Completed);
+            _Subject<T>.Next(s => s.OnNext, StackTraceHolder.New(1).GetName(false), this);
 
             _next.Sub(pub, scope);
         }
@@ -51,6 +56,7 @@ namespace Lib.DataFlow
                 return;
             }
 
+            _Subject<T>.Next(s => s.Next1, StackTraceHolder.New(1).GetName(false), this);
             _next.Next(msg);
         }
     }
@@ -63,8 +69,9 @@ namespace Lib.DataFlow
 
         public Subject(IScope scope)
         {
+            _Subject.Register(this, StackTraceHolder.New(3).GetName(false));
             Asr.IsFalse(scope.Completed);
-            
+
             scope.OnDispose(_Dispose);
             _next = NextPool.Get();
         }
@@ -73,6 +80,7 @@ namespace Lib.DataFlow
         {
             if (Completed) return;
 
+            _Subject.Next(s => s.Dispose, StackTraceHolder.New(1).GetName(false), this);
             _next.Dispose();
             NextPool.Release(ref _next);
         }
@@ -87,7 +95,8 @@ namespace Lib.DataFlow
             }
 
             Asr.IsFalse(scope.Completed);
-            
+
+            _Subject.Next(s => s.OnNext, StackTraceHolder.New(1).GetName(false), this);
             _next.Sub(pub, scope);
         }
 
@@ -100,6 +109,7 @@ namespace Lib.DataFlow
                 return;
             }
 
+            _Subject.Next(s => s.Next1, StackTraceHolder.New(1).GetName(false), this);
             _next.Next();
         }
 

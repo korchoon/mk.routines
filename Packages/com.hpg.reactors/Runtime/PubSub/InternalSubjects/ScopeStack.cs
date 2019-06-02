@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Lib.Async.Debugger;
 using Lib.Attributes;
 using Lib.Pooling;
 using Utility.Asserts;
@@ -9,6 +10,7 @@ namespace Lib.DataFlow
     internal class ScopeStack : IDisposable, IScope
     {
         List<Action> _stack;
+        bool _started;
         static Pool<List<Action>> Pool { get; } = new Pool<List<Action>>(() => new List<Action>(), subs => subs.Clear());
 
         public ScopeStack()
@@ -24,16 +26,23 @@ namespace Lib.DataFlow
         public void Dispose()
         {
             if (Completed) return;
-
+            if (_started) return; // todo turn off and reproduce
+            
+            _started = true;
 
             for (var i = _stack.Count - 1; i >= 0; i--)
             {
+                Asr.IsNotNull(_stack);
                 var t = _stack[i];
+                _stack[i] = null;
+                Asr.IsNotNull(t);
                 t.Invoke();
+
+                if (Completed) return; //todo reproduce case
             }
 
             Completed = true;
-            
+
             _stack.Clear();
             Pool.Release(ref _stack);
 
@@ -58,9 +67,9 @@ namespace Lib.DataFlow
         [NonPerformant(PerfKind.TimeHeavy)]
         public void Unsubscribe(Action dispose)
         {
-            if (Completed)
+            if (_started || Completed)
             {
-                Asr.Fail("Cannot unsubscribe during or after disposal");
+//                Asr.Fail("Cannot unsubscribe during or after disposal");
                 return;
             }
 

@@ -1,17 +1,17 @@
 {
-    "name": "Lib.Reactors.Editor",
+    "name": "Lib.Reactors.Debugging",
     "references": [
         "Lib.Reactors"
     ],
     "optionalUnityReferences": [],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [],
+    "defineConstraints": [
+        "ODIN_INSPECTOR"
+    ],
     "versionDefines": []
 }
