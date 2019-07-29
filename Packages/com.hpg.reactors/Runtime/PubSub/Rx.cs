@@ -1,3 +1,9 @@
+// ----------------------------------------------------------------------------
+// The MIT License
+// Async Reactors framework https://github.com/korchoon/async-reactors
+// Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
+// ----------------------------------------------------------------------------
+
 #define M_DISABLED
 using Lib.Attributes;
 using Lib.DataFlow;
