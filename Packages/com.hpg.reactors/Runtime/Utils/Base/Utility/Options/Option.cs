@@ -14,7 +14,7 @@ using Utility.Asserts;
 namespace Lib.Utility
 {
     [Serializable,]
-    public struct Option<T> : IEquatable<Option<T>>, IComparable<Option<T>>, IOption, IOption<T>
+    public struct Option<T> : IEquatable<Option<T>>, IComparable<Option<T>>
     {
         // ReSharper disable once StaticMemberInGenericType
         internal static readonly bool IsValueType;
