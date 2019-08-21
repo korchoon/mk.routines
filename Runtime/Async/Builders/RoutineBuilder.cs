@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 // The MIT License
 // Async Reactors framework https://github.com/korchoon/async-reactors
-// Copyright (c) 2017-2019 Mikhail Korchun <korchoon@gmail.com>
+// Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
 
 using System;
@@ -18,22 +18,27 @@ namespace Lib.Async
     {
         Action _continuation;
         IBreakableAwaiter _innerAwaiter;
+        [UsedImplicitly] public Routine Task { get; }
 
         RoutineBuilder()
         {
-            _RoutineBuilder.Register(this);
-
             Task = new Routine();
-            _RoutineBuilder.Next(trc => trc.CtorTrace, StackTraceHolder.New(3), this);
+            Task.Scope.OnDispose(BreakCurrent);
+        }
+
+        void BreakCurrent()
+        {
+            var i = _innerAwaiter;
+            _innerAwaiter = null;
+            if (i == null) return;
+
+            i.Unsub();
+            i.BreakInner();
         }
 
         [UsedImplicitly]
-        public static RoutineBuilder Create()
-        {
-            return new RoutineBuilder();
-        }
+        public static RoutineBuilder Create() => new RoutineBuilder();
 
-        [UsedImplicitly] public Routine Task { get; private set; }
 
         [UsedImplicitly]
         public void Start<TStateMachine>(ref TStateMachine stateMachine)
@@ -43,34 +48,21 @@ namespace Lib.Async
             _continuation.Invoke();
         }
 
-
         [UsedImplicitly]
         public void SetResult()
         {
-            BreakInner();
-            Task.PubDispose.Dispose();
-            _RoutineBuilder.Next(d => d.AfterSetResult, this);
+            if (Task.Scope.Completed)
+                return;
+         
+            Task.Complete.Next();
         }
-
 
         [UsedImplicitly]
         public void SetException(Exception e)
         {
-            BreakInner();
-            Task.StopImmediately.DisposeWith(e);
-
-            if (!(e is RoutineStoppedException))
-            {
-                Debug.LogException(e);
-                SchPub.PubError.Next(e);
-            }
-
-            _RoutineBuilder.Next(d => d.AfterSetException, e, this);
-        }
-
-        void BreakInner()
-        {
-            _innerAwaiter?.Break(RoutineStoppedException.Empty);
+            Debug.LogException(e);
+            SchPub.PubError.Next(e);
+            Task.Complete.Next();
         }
 
         [UsedImplicitly]
@@ -81,18 +73,11 @@ namespace Lib.Async
             switch (awaiter)
             {
                 case IBreakableAwaiter breakableAwaiter:
-                    awaiter.OnCompleted(_continuation);
-                    _RoutineBuilder.Next(d => d.CurrentAwait, StackTraceHolder.New(3), this);
                     _innerAwaiter = breakableAwaiter;
+                    awaiter.OnCompleted(_continuation);
                     break;
                 case SelfScopeAwaiter selfScopeAwaiter:
-                    selfScopeAwaiter.Value = Task._scope;
-                    Asr.IsNotNull(Task._scope);
-                    awaiter.OnCompleted(_continuation);
-                    break;
-                case SelfDisposeAwaiter selfDisposeAwaiter:
-                    selfDisposeAwaiter.Value = Task.PubDispose;
-                    Asr.IsNotNull(Task.PubDispose);
+                    selfScopeAwaiter.Value = Task.Scope;
                     awaiter.OnCompleted(_continuation);
                     break;
                 default:
@@ -109,9 +94,6 @@ namespace Lib.Async
 
 
         [UsedImplicitly]
-        public void SetStateMachine(IAsyncStateMachine stateMachine)
-        {
-            _continuation = stateMachine.MoveNext;
-        }
+        public void SetStateMachine(IAsyncStateMachine stateMachine) => _continuation = stateMachine.MoveNext;
     }
 }

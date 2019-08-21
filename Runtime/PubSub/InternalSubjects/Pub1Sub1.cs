@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 // The MIT License
 // Async Reactors framework https://github.com/korchoon/async-reactors
-// Copyright (c) 2017-2019 Mikhail Korchun <korchoon@gmail.com>
+// Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
 
 using System;
@@ -10,8 +10,7 @@ using Utility.Asserts;
 
 namespace Lib.DataFlow
 {
-
-       internal class Pub1Sub1 : ISub, IPub
+    internal class Pub1Sub1 : ISub, IPub
     {
         Action _action;
         IScope _scope;
@@ -62,7 +61,6 @@ namespace Lib.DataFlow
             RoutineUtils.MoveNextAndClear(ref _action);
             _Complete();
         }
-
     }
 
     internal class Pub1Sub1<T> : ISub<T>, IPub<T>
@@ -109,7 +107,7 @@ namespace Lib.DataFlow
 
         public void Next(T msg)
         {
-//            Asr.IsFalse(_completed);
+            Asr.IsFalse(_completed);
             if (_completed.WasTrue())
                 return;
 
@@ -117,6 +115,5 @@ namespace Lib.DataFlow
             RoutineUtils.MoveNextAndClear(ref _action, msg);
             _Complete();
         }
-
     }
 }

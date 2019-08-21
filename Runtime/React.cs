@@ -1,12 +1,13 @@
 // ----------------------------------------------------------------------------
 // The MIT License
 // Async Reactors framework https://github.com/korchoon/async-reactors
-// Copyright (c) 2017-2019 Mikhail Korchun <korchoon@gmail.com>
+// Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
 
 using System;
 using JetBrains.Annotations;
 using Lib.DataFlow;
+using Utility.Asserts;
 
 namespace Lib
 {
@@ -15,6 +16,7 @@ namespace Lib
         [MustUseReturnValue]
         public static (IPub pub, ISub sub) PubSub(this IScope scope)
         {
+            Asr.IsFalse(scope.Completed);
             var subject = new Subject(scope);
             return (subject, subject);
         }

@@ -1,11 +1,12 @@
 ﻿// ----------------------------------------------------------------------------
 // The MIT License
 // Async Reactors framework https://github.com/korchoon/async-reactors
-// Copyright (c) 2017-2019 Mikhail Korchun <korchoon@gmail.com>
+// Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Game.Proto;
 using Lib.Async;
 using Lib.Attributes;
@@ -48,7 +49,6 @@ namespace Lib.DataFlow
             Asr.IsTrue(_current.Count == 0);
             Swap();
 #else
-
             if (_current.Count == 0)
                 Swap();
             else if (_current.Count > 0 && _next.Count > 0) 
@@ -106,7 +106,6 @@ namespace Lib.DataFlow
     }
 
 
-    [NonPerformant(PerfKind.GC)]
     internal sealed class Subscribers<T> : IPub<T>
     {
         struct Item

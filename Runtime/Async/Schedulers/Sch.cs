@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 // The MIT License
 // Async Reactors framework https://github.com/korchoon/async-reactors
-// Copyright (c) 2017-2019 Mikhail Korchun <korchoon@gmail.com>
+// Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
 
 using System;
@@ -24,7 +24,7 @@ namespace Lib.Async
 
         public static ISub<Exception> OnError { get; internal set; }
         public static ISub Update { get; internal set; }
-        public static IScope Scope { get; internal set; }
+        internal static IScope Scope { get; set; }
 
         #endregion
 

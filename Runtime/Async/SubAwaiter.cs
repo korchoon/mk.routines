@@ -1,7 +1,7 @@
 ﻿// ----------------------------------------------------------------------------
 // The MIT License
 // Async Reactors framework https://github.com/korchoon/async-reactors
-// Copyright (c) 2017-2019 Mikhail Korchun <korchoon@gmail.com>
+// Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
 
 using System;
@@ -15,116 +15,82 @@ using Utility.Asserts;
 
 namespace Lib.Async
 {
-    public class SubAwaiter : ICriticalNotifyCompletion, IBreakableAwaiter
+#if M_DISABLED
+     public class SubAwaiter : ICriticalNotifyCompletion, IBreakableAwaiter
     {
+        IDisposable _dispose;
+        public IScope InnerTree { get; }
+
         SubAwaiter()
         {
+            _dispose = React.Scope(out var tmp);
+            InnerTree = tmp;
         }
-        
-        Action _continuation;
-        Option<Exception> _exception;
 
-        public static SubAwaiter New() => new SubAwaiter {_continuation = Empty.Action()};
+        public static SubAwaiter New() => new SubAwaiter();
 
 
-        [UsedImplicitly] public bool IsCompleted { get; private set; }
+        [UsedImplicitly] public bool IsCompleted => InnerTree.Completed;
 
         [UsedImplicitly]
         public void GetResult()
         {
-            if (_exception.TryGet(out var err)) throw err;
+//            Break();
         }
+
+        public void Break() => _dispose.Dispose();
 
         [UsedImplicitly]
-        public void UnsafeOnCompleted(Action moveNext)
-        {
-            if (IsCompleted)
-            {
-                moveNext.Invoke(); // todo
-                return;
-            }
-
-            _continuation = moveNext;
-        }
+        public void UnsafeOnCompleted(Action moveNext) => InnerTree.OnDispose(moveNext);
 
 
         [UsedImplicitly]
         void INotifyCompletion.OnCompleted(Action continuation) => UnsafeOnCompleted(continuation);
-
-        public void Break(Exception e)
-        {
-            if (_exception.HasValue) return;
-
-            _exception = e;
-            _Dispose();
-        }
-
-        internal void _Dispose()
-        {
-            IsCompleted = true;
-            RoutineUtils.MoveNextAndClear(ref _continuation);
-        }
     }
 
     public class SubAwaiter<T> : ICriticalNotifyCompletion, IBreakableAwaiter
     {
         Option<T> _result;
-        Action _continuation;
-        Option<Exception> _exception;
-        
-//        public Pool<SubAwaiter<T>> Pool = new Pool<SubAwaiter<T>>(() => new SubAwaiter<T>(), );
-        
-        public SubAwaiter(ISub<T> ex)
-        {
-            ex.OnNextOnce(OneOff);
+        public IScope InnerTree { get; }
+        IDisposable _dispose;
 
-            void OneOff(T msg)
+        public SubAwaiter(ISub<T> s)
+        {
+            _dispose = React.Scope(out var tmp);
+            InnerTree = tmp;
+            s.OnNext(msg =>
             {
                 _result = msg;
-                Dispose();
-            }
+                Break();
+            }, InnerTree);
         }
 
         [UsedImplicitly]
         public T GetResult()
         {
-            if (_exception.TryGet(out var e)) throw e;
+//            Break();
 
             if (!_result.TryGet(out var res))
-                Asr.Fail("Tried to break & get result of Routine<T>");
+            {
+//                Asr.Fail("Tried to break & get result of Routine<T>");
+            }
 
             return res; //todo
         }
 
-        [UsedImplicitly] public bool IsCompleted { get; private set; }
+        [UsedImplicitly] public bool IsCompleted => InnerTree.Completed;
 
         [UsedImplicitly]
         public void OnCompleted(Action continuation) => UnsafeOnCompleted(continuation);
 
         [UsedImplicitly]
-        public void UnsafeOnCompleted(Action moveNext)
+        public void UnsafeOnCompleted(Action moveNext) => InnerTree.OnDispose(moveNext);
+
+
+        public void Break()
         {
-            if (IsCompleted)
-            {
-                moveNext.Invoke(); // todo
-                return;
-            }
-
-            _continuation = moveNext;
-        }
-
-        public void Break(Exception e)
-        {
-            if (_exception.HasValue) return;
-
-            _exception = e;
-            Dispose();
-        }
-
-        void Dispose()
-        {
-            IsCompleted = true;
-            RoutineUtils.MoveNextAndClear(ref _continuation);
+            _dispose.Dispose();
         }
     }
+#endif
 }

@@ -1,29 +1,18 @@
 // ----------------------------------------------------------------------------
 // The MIT License
 // Async Reactors framework https://github.com/korchoon/async-reactors
-// Copyright (c) 2017-2019 Mikhail Korchun <korchoon@gmail.com>
+// Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
 
 using System;
+using System.Runtime.CompilerServices;
 using Lib.DataFlow;
 
 namespace Lib.Async
 {
     internal static class RoutineUtils
     {
-        internal static void MoveNextAndClear<T>(ref Func<T, bool> moveNextOnce, T msg)
-        {
-            if (moveNextOnce == null)
-            {
-                moveNextOnce = Empty.FuncPredicate<T>();
-                return;
-            }
-
-            var buf = moveNextOnce;
-            moveNextOnce = Empty.FuncPredicate<T>();
-            buf.Invoke(msg);
-        }
-        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void MoveNextAndClear<T>(ref Action<T> moveNextOnce, T msg)
         {
             if (moveNextOnce == null)
@@ -37,6 +26,7 @@ namespace Lib.Async
             buf.Invoke(msg);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void MoveNextAndClear(ref Action moveNextOnce)
         {
             if (moveNextOnce == null)
@@ -50,6 +40,7 @@ namespace Lib.Async
             buf.Invoke();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool WasTrue(ref this bool flag)
         {
             var copy = flag;
