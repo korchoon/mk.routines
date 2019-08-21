@@ -10,12 +10,14 @@ using UnityEditor;
 #if !ODIN_INSPECTOR
 
 
+#if UNITY_EDITOR
 namespace Sirenix.OdinInspector.Editor
 {
     public class OdinEditorWindow : EditorWindow
     {
     }
 }
+#endif
 
 namespace Sirenix.OdinInspector
 {
@@ -45,8 +47,10 @@ namespace Sirenix.OdinInspector
         public ButtonAttribute(ButtonSizes b)
         {
         }
-        
-        public ButtonAttribute(){}
+
+        public ButtonAttribute()
+        {
+        }
     }
 
     public enum ButtonSizes
