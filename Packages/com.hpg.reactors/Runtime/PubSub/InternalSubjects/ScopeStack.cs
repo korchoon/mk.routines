@@ -1,11 +1,13 @@
 // ----------------------------------------------------------------------------
 // The MIT License
 // Async Reactors framework https://github.com/korchoon/async-reactors
-// Copyright (c) 2017-2019 Mikhail Korchun <korchoon@gmail.com>
+// Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
 
 using System;
 using System.Collections.Generic;
+using Lib.Async.Debugger;
+using Lib.Attributes;
 using Lib.Pooling;
 using Utility.Asserts;
 
@@ -13,61 +15,73 @@ namespace Lib.DataFlow
 {
     internal class ScopeStack : IDisposable, IScope
     {
-        HashSet<Action> _set;
-        bool _disposed;
-        static Pool<HashSet<Action>> HashSetPool { get; } = new Pool<HashSet<Action>>(() => new HashSet<Action>(), subs => subs.Clear());
-        static Pool<List<Action>> ListPool { get; } = new Pool<List<Action>>(() => new List<Action>(), subs => subs.Clear());
+        List<Action> _stack;
+        bool _started;
+        static Pool<List<Action>> Pool { get; } = new Pool<List<Action>>(() => new List<Action>(), subs => subs.Clear());
 
         public ScopeStack()
         {
             _Scope.Register(this);
             _Scope.Next(s => s.CtorStackTrace, StackTraceHolder.New(3), this);
-            
-            _disposed = false;
-            _set = HashSetPool.Get();
-            Asr.IsTrue(_set.Count == 0);
+
+            Completed = false;
+            _stack = Pool.Get();
+            Asr.IsTrue(_stack.Count == 0);
         }
 
         public void Dispose()
         {
-            if (_disposed) return;
-
-            _disposed = true;
-
-            using (ListPool.GetScoped(out var tmpList))
-            {
-                tmpList.AddRange(_set);
-                HashSetPool.Release(ref _set);
-
-                // emulate stack
-                var count = tmpList.Count;
-                for (var i = count - 1; i >= 0; i--)
-                    tmpList[i].Invoke();
-            }
+            if (Completed) return;
+            if (_started) return; // todo turn off and reproduce
             
+            _started = true;
+
+            for (var i = _stack.Count - 1; i >= 0; i--)
+            {
+                Asr.IsNotNull(_stack);
+                var t = _stack[i];
+                _stack[i] = null;
+                Asr.IsNotNull(t);
+                t.Invoke();
+
+                if (Completed) return; //todo reproduce case
+            }
+
+            Completed = true;
+
+            _stack.Clear();
+            Pool.Release(ref _stack);
+
             _Scope.Next(scope => scope.Dispose, this);
             _Scope.Deregister(this);
         }
 
-        public bool Completed => _disposed;
+        public bool Completed { get; private set; }
 
         public void OnDispose(Action dispose)
         {
-            if (_disposed)
+            if (Completed)
             {
                 dispose.Invoke();
                 return;
             }
 
-            _set.Add(dispose);
+            _stack.Add(dispose);
             _Scope.Next(s => s.OnDispose, (StackTraceHolder.New(1), dispose), this);
         }
 
+        [NonPerformant(PerfKind.TimeHeavy)]
         public void Unsubscribe(Action dispose)
         {
-            if (_disposed) return;
+            if (_started || Completed)
+            {
+//                Asr.Fail("Cannot unsubscribe during or after disposal");
+                return;
+            }
 
-            _set.Remove(dispose);
+            var any = _stack.Remove(dispose);
+            Asr.IsTrue(any, "Delegate not found: make sure it's the same which was passed to OnDispose");
+
             _Scope.Next(s => s.Unsubscribe, (StackTraceHolder.New(1), dispose), this);
         }
     }

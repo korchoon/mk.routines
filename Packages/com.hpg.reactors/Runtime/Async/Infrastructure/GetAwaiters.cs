@@ -1,7 +1,7 @@
 ﻿// ----------------------------------------------------------------------------
 // The MIT License
 // Async Reactors framework https://github.com/korchoon/async-reactors
-// Copyright (c) 2017-2019 Mikhail Korchun <korchoon@gmail.com>
+// Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
 
 using System;
@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lib.DataFlow;
 using Lib.Timers;
+using Lib.Utility;
 using UnityEngine;
 
 namespace Lib.Async
@@ -23,7 +24,7 @@ namespace Lib.Async
 
             var tt = factory.Invoke(cts.Token);
             var routine = _Inner(tt);
-            routine.Scope(scope).OnDispose(cts.Dispose);
+            routine.GetScope(scope).OnDispose(cts.Dispose);
             return routine;
 
             async Routine _Inner(Task t)
@@ -36,13 +37,13 @@ namespace Lib.Async
             }
         }
 
-        public static Routine<T> Convert<T>(Func<CancellationToken, Task<T>> factory, IScope scope)
+         public static Routine<T> Convert<T>(Func<CancellationToken, Task<T>> factory, IScope scope)
         {
             var cts = new CancellationTokenSource();
 
             var tt = factory.Invoke(cts.Token);
             var routine = _Inner(tt);
-            routine._dispose.DisposeOn(scope);
+            scope.OnDispose(() => routine.Dispose());
             routine.Scope.OnDispose(cts.Dispose);
             return routine;
 
@@ -56,21 +57,60 @@ namespace Lib.Async
             }
         }
 
-        public static SubAwaiter<T> GetAwaiter<T>(this ISub<T> s) => new SubAwaiter<T>(s);
-
-        public static SubAwaiter GetAwaiter(this ISub aw)
+        public static GenericAwaiter2<T> GetAwaiter<T>(this ISub<T> s)
         {
-            var res = SubAwaiter.New();
-            aw.OnNextOnce(res._Dispose);
+            var result = new Option<T>();
+            var d = React.Scope(out var scope);
+            bool done = false;
+            s.OnNext(Maybe, scope);
+            var res1 = new GenericAwaiter2(scope, () => done = true);
+            var res = new GenericAwaiter2<T>(res1, () => result.GetOrFail());
             return res;
+
+            void Maybe(T msg)
+            {
+                result = msg;
+                if (done) return;
+                d.Dispose();
+            }
         }
 
-        public static ScopeAwaiter GetAwaiter(this IScope aw) => new ScopeAwaiter(aw);
+        public static GenericAwaiter2 GetAwaiter(this ISub aw)
+        {
+            var d = React.Scope(out var scope);
 
-        public static ScopeAwaiter GetAwaiter(this float sec) => Delay(sec, DefaultSch).GetAwaiter();
+            bool done = false;
+            aw.OnNext(Maybe, scope);
+            var res = new GenericAwaiter2(scope, () => done = true);
+            return res;
 
-        public static ScopeAwaiter GetAwaiter(this int sec) => GetAwaiter((float) sec);
-        public static ScopeAwaiter GetAwaiter(this double sec) => GetAwaiter((float) sec);
+            void Maybe()
+            {
+                if (done) return;
+                d.Dispose();
+            }
+        }
+
+        public static GenericAwaiter2 GetAwaiter(this IScope outer)
+        {
+            var d = React.Scope(out var scope);
+            var (pub, sub) = outer.PubSub();
+            outer.OnDispose(() =>
+            {
+                if (scope.Completed)
+                    return;
+                pub.Next();
+                d.Dispose();
+            });
+
+            sub.OnNext(d.Dispose, outer);
+            return new GenericAwaiter2(scope, d.Dispose);
+        }
+
+        public static GenericAwaiter2 GetAwaiter(this float sec) => Delay(sec, DefaultSch).GetAwaiter();
+
+        public static GenericAwaiter2 GetAwaiter(this int sec) => GetAwaiter((float) sec);
+        public static GenericAwaiter2 GetAwaiter(this double sec) => GetAwaiter((float) sec);
 
 
         public static IScope Delay(float seconds, ISub s)

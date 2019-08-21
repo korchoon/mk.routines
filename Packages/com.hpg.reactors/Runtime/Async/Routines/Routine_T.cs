@@ -1,7 +1,7 @@
 ﻿// ----------------------------------------------------------------------------
 // The MIT License
 // Async Reactors framework https://github.com/korchoon/async-reactors
-// Copyright (c) 2017-2019 Mikhail Korchun <korchoon@gmail.com>
+// Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
 
 using System;
@@ -19,99 +19,41 @@ using Debug = UnityEngine.Debug;
 namespace Lib.Async
 {
     [AsyncMethodBuilder(typeof(RoutineBuilder<>))]
-    public sealed class Routine<T>
+    public sealed class Routine<T> : IDisposable
     {
-        internal IDisposable _dispose;
+        internal IPub Complete;
+        ISub _onComplete;
+        
         internal IScope Scope;
-        internal CatchStack PubErr;
-        internal IErrorScope<Exception> _onErr;
-        Action _moveAllAwaiters;
-        bool _isCompleted;
+        IDisposable _pubScope;
+        
+        Option<T> _result;
 
-        internal Option<T> _res;
+        internal void SetResult(T res) => _result = res;
+
+        public IScope GetScope(IScope scope)
+        {
+            scope.OnDispose(Dispose);
+            return Scope;
+        }
 
         internal Routine()
         {
-            _moveAllAwaiters = Empty.Action();
-            PubErr = new CatchStack(out _onErr);
-            _dispose = React.Scope(out Scope);
-            Scope.OnDispose(_InnerDispose);
-            _onErr.OnDispose(_ => _dispose.Dispose());
-
-            void _InnerDispose()
-            {
-                _isCompleted = true;
-                RoutineUtils.MoveNextAndClear(ref _moveAllAwaiters);
-                _dispose.Dispose();
-            }
+            _pubScope = React.Scope(out Scope);
+            (Complete, _onComplete) = Scope.PubSub();
+            _onComplete.OnNext(Dispose, Scope);
         }
 
         [UsedImplicitly]
-        public Awaiter GetAwaiter()
+        public GenericAwaiter2<T> GetAwaiter()
         {
-            return new Awaiter(this, _onErr, ref _moveAllAwaiters);
+            if (!Scope.Completed)
+                _onComplete.OnNext(Dispose, Scope);
+
+            var aw = new GenericAwaiter2(Scope, Dispose);
+            return new GenericAwaiter2<T>(aw, () => _result.GetOrFail());
         }
 
-
-        public class Awaiter : ICriticalNotifyCompletion, IBreakableAwaiter
-        {
-            Routine<T> _awaitableTask;
-            Action _continuation;
-            Option<Exception> _exception;
-
-            internal Awaiter(Routine<T> par, IErrorScope<Exception> onErr, ref Action onMoveNext)
-            {
-                _awaitableTask = par;
-                _continuation = Empty.Action();
-                onErr.OnDispose(_DisposeWith);
-                onMoveNext += () => RoutineUtils.MoveNextAndClear(ref _continuation);
-            }
-
-            void _DisposeWith(Exception err)
-            {
-                _exception = err;
-                RoutineUtils.MoveNextAndClear(ref _continuation);
-            }
-
-            [UsedImplicitly] public bool IsCompleted => _awaitableTask._isCompleted;
-
-            [UsedImplicitly]
-            public T GetResult()
-            {
-                if (_exception.TryGet(out var err))
-                {
-                    if (err is RoutineStoppedException) throw err;
-
-                    throw new Exception("See Inner", err);
-                }
-
-                if (_awaitableTask._res.TryGet(out var result)) return result;
-
-                Asr.Fail("default return value");
-                return default;
-            }
-
-            public void OnCompleted(Action continuation)
-            {
-                if (IsCompleted)
-                {
-                    continuation.Invoke();
-                    return;
-                }
-
-                _continuation = continuation;
-            }
-
-            public void UnsafeOnCompleted(Action continuation) => ((INotifyCompletion) this).OnCompleted(continuation);
-
-            public void Break(Exception e)
-            {
-                if (_exception.HasValue) return;
-
-                _exception = e;
-                _awaitableTask.PubErr.DisposeWith(e);
-                RoutineUtils.MoveNextAndClear(ref _continuation);
-            }
-        }
+        public void Dispose() => _pubScope.Dispose();
     }
 }

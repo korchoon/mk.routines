@@ -1,18 +1,18 @@
 ﻿// ----------------------------------------------------------------------------
 // The MIT License
 // Async Reactors framework https://github.com/korchoon/async-reactors
-// Copyright (c) 2017-2019 Mikhail Korchun <korchoon@gmail.com>
+// Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
 
 using System;
 using Lib.Async;
+using Lib.Async.Debugger;
 using Lib.Attributes;
 using Lib.Pooling;
 using Utility.Asserts;
 
 namespace Lib.DataFlow
 {
-    [NonPerformant(PerfKind.GC)]
     internal class Subject<T> : ISub<T>, IPub<T>
     {
         Subscribers<T> _next;
@@ -23,6 +23,8 @@ namespace Lib.DataFlow
 
         public Subject(IScope scope)
         {
+            _Subject<T>.Register(this, StackTraceHolder.New(3).GetName(false));
+            Asr.IsFalse(scope.Completed);
             scope.OnDispose(_Dispose);
             _next = NextPool.Get();
         }
@@ -33,14 +35,20 @@ namespace Lib.DataFlow
 
             _next.Dispose();
 
+            _Subject<T>.Next(s => s.Dispose, StackTraceHolder.New(1).GetName(false), this);
             NextPool.Release(ref _next);
         }
 
         public void OnNext(Action<T> pub, IScope scope)
         {
-            Asr.IsFalse(Completed);
             if (Completed)
+            {
+                Asr.Fail("Tried to subscribe to ISub which is completed");
                 return;
+            }
+
+            Asr.IsFalse(scope.Completed);
+            _Subject<T>.Next(s => s.OnNext, StackTraceHolder.New(1).GetName(false), this);
 
             _next.Sub(pub, scope);
         }
@@ -48,9 +56,13 @@ namespace Lib.DataFlow
 
         public void Next(T msg)
         {
-            Asr.IsFalse(Completed);
-            if (Completed) return;
+            if (Completed)
+            {
+                Asr.Fail("Tried to publish Next to IPub which is completed");
+                return;
+            }
 
+            _Subject<T>.Next(s => s.Next1, StackTraceHolder.New(1).GetName(false), this);
             _next.Next(msg);
         }
     }
@@ -63,6 +75,9 @@ namespace Lib.DataFlow
 
         public Subject(IScope scope)
         {
+            _Subject.Register(this, StackTraceHolder.New(3).GetName(false));
+            Asr.IsFalse(scope.Completed);
+
             scope.OnDispose(_Dispose);
             _next = NextPool.Get();
         }
@@ -71,6 +86,7 @@ namespace Lib.DataFlow
         {
             if (Completed) return;
 
+            _Subject.Next(s => s.Dispose, StackTraceHolder.New(1).GetName(false), this);
             _next.Dispose();
             NextPool.Release(ref _next);
         }
@@ -78,19 +94,28 @@ namespace Lib.DataFlow
 
         public void OnNext(Action pub, IScope scope)
         {
-            Asr.IsFalse(Completed);
             if (Completed)
+            {
+                Asr.Fail("Tried to subscribe to ISub which is completed");
                 return;
+            }
 
+            Asr.IsFalse(scope.Completed);
+
+            _Subject.Next(s => s.OnNext, StackTraceHolder.New(1).GetName(false), this);
             _next.Sub(pub, scope);
         }
 
 
         public void Next()
         {
-            Asr.IsFalse(Completed);
-            if (Completed) return;
+            if (Completed)
+            {
+                Asr.Fail("Tried to publish Next to IPub which is completed");
+                return;
+            }
 
+            _Subject.Next(s => s.Next1, StackTraceHolder.New(1).GetName(false), this);
             _next.Next();
         }
 

@@ -1,7 +1,7 @@
 ﻿// ----------------------------------------------------------------------------
 // The MIT License
 // Async Reactors framework https://github.com/korchoon/async-reactors
-// Copyright (c) 2017-2019 Mikhail Korchun <korchoon@gmail.com>
+// Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
 
 using System;
@@ -21,46 +21,52 @@ namespace Lib.Async
         Action _continuation;
         IBreakableAwaiter _innerAwaiter;
 
+        [UsedImplicitly] public Routine<T> Task { get; }
+
         RoutineBuilder()
         {
-            _RoutineBuilder.Register(this);
-            _RoutineBuilder.Next(trc => trc.CtorTrace, StackTraceHolder.New(3), this);
             Task = new Routine<T>();
+            Task.Scope.OnDispose(BreakCurrent);
+        }
+
+        void BreakCurrent()
+        {
+            var i = _innerAwaiter;
+            _innerAwaiter = null;
+            if (i == null) return;
+
+            i.Unsub();
+            i.BreakInner();
         }
 
         [UsedImplicitly]
         public static RoutineBuilder<T> Create() => new RoutineBuilder<T>();
 
-        [UsedImplicitly] public Routine<T> Task { get; }
 
+        [UsedImplicitly]
+        public void Start<TStateMachine>(ref TStateMachine stateMachine)
+            where TStateMachine : IAsyncStateMachine
+        {
+            _continuation = stateMachine.MoveNext;
+            _continuation.Invoke();
+        }
 
         [UsedImplicitly]
         public void SetResult(T value)
         {
-            Task._res = value;
-            BreakInner();
-            Task._dispose.Dispose();
-            _RoutineBuilder.Next(d => d.AfterSetResult, this);
+            if (Task.Scope.Completed)
+                return;
+
+            Task.SetResult(value);
+            Task.Complete.Next();
         }
 
         [UsedImplicitly]
         public void SetException(Exception e)
         {
-            BreakInner();
-            Task.PubErr.DisposeWith(e);
-            if (!(e is RoutineStoppedException))
-            {
-                Debug.LogException(e);
-                SchPub.PubError.Next(e);
-            }
-
-            _RoutineBuilder.Next(d => d.AfterSetException, e, this);
-        }
-
-
-        void BreakInner()
-        {
-            _innerAwaiter?.Break(RoutineStoppedException.Empty);
+            Debug.LogException(e);
+            SchPub.PubError.Next(e);
+            Task.Complete.Next();
         }
 
         [UsedImplicitly]
@@ -71,18 +77,11 @@ namespace Lib.Async
             switch (awaiter)
             {
                 case IBreakableAwaiter breakableAwaiter:
-                    awaiter.OnCompleted(_continuation);
-                    _RoutineBuilder.Next(d => d.CurrentAwait, StackTraceHolder.New(3), this);
                     _innerAwaiter = breakableAwaiter;
+                    awaiter.OnCompleted(_continuation);
                     break;
                 case SelfScopeAwaiter selfScopeAwaiter:
                     selfScopeAwaiter.Value = Task.Scope;
-                    Asr.IsNotNull(Task.Scope);
-                    awaiter.OnCompleted(_continuation);
-                    break;
-                case SelfDisposeAwaiter selfDisposeAwaiter:
-                    selfDisposeAwaiter.Value = Task._dispose;
-                    Asr.IsNotNull(Task._dispose);
                     awaiter.OnCompleted(_continuation);
                     break;
                 default:
@@ -97,19 +96,8 @@ namespace Lib.Async
             where TAwaiter : ICriticalNotifyCompletion where TStateMachine : IAsyncStateMachine =>
             AwaitOnCompleted(ref awaiter, ref stateMachine);
 
-        [UsedImplicitly]
-        public void Start<TStateMachine>(ref TStateMachine stateMachine)
-            where TStateMachine : IAsyncStateMachine
-        {
-            _continuation = stateMachine.MoveNext;
-            _continuation.Invoke();
-        }
-
 
         [UsedImplicitly]
-        public void SetStateMachine(IAsyncStateMachine stateMachine)
-        {
-            _continuation = stateMachine.MoveNext;
-        }
+        public void SetStateMachine(IAsyncStateMachine stateMachine) => _continuation = stateMachine.MoveNext;
     }
 }
