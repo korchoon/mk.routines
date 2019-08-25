@@ -38,7 +38,7 @@ namespace Lib
         {
             var s = new CachedSubject<T>(scope);
             sub.Invoke(Action);
-            scope.OnDispose(() => unsub.Invoke(Action));
+            scope.Subscribe(() => unsub.Invoke(Action));
 
             return s;
 
@@ -49,7 +49,7 @@ namespace Lib
         {
             var (pub, res) = scope.PubSub<T>();
             sub.Invoke(Action);
-            scope.OnDispose(() => unsub.Invoke(Action));
+            scope.Subscribe(() => unsub.Invoke(Action));
 
             return res;
 
@@ -70,9 +70,9 @@ namespace Lib
                 var routine = callback.Invoke();
                 var (p, s) = scope.PubSub<T>();
 
-                scope.OnDispose(routine.Dispose);
+                scope.Subscribe(routine.Dispose);
                 var aw = routine.GetAwaiter();
-                routine.Scope.OnDispose(() =>
+                routine.Scope.Subscribe(() =>
                 {
                     try
                     {
@@ -183,7 +183,7 @@ namespace Lib
 
         public static T1 DisposeOn<T1>(this T1 dispose, IScope scope) where T1 : IDisposable
         {
-            scope.OnDispose(dispose.Dispose);
+            scope.Subscribe(dispose.Dispose);
             return dispose;
         }
     }

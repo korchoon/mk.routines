@@ -73,14 +73,14 @@ namespace Lib
 //            Assert.IsNotNull(gameObject);
             gameObject.SetActive(true);
 //            Assert.IsTrue(gameObject.activeInHierarchy);
-            scope.OnDispose(() => gameObject.SetActive(false));
+            scope.Subscribe(() => gameObject.SetActive(false));
         }
 
         public static void Deactivate(this GameObject gameObject, IScope scope)
         {
 //            Assert.IsNotNull(gameObject);
             gameObject.SetActive(false);
-            scope.OnDispose(() => gameObject.SetActive(true));
+            scope.Subscribe(() => gameObject.SetActive(true));
         }
 
         #region GameObject[]
@@ -107,14 +107,14 @@ namespace Lib
         {
             Assert.IsNotNull(gameObject);
             gameObject.SetActive(true);
-            scope.OnDispose(() => gameObject.SetActive(false));
+            scope.Subscribe(() => gameObject.SetActive(false));
         }
 
         public static void DeactivateScope(this GameObject[] gameObject, IScope scope)
         {
             Assert.IsNotNull(gameObject);
             gameObject.SetActive(false);
-            scope.OnDispose(() => gameObject.SetActive(true));
+            scope.Subscribe(() => gameObject.SetActive(true));
         }
 
         public static void SetActive(this GameObject[] gameObjects, bool value)

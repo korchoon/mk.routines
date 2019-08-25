@@ -25,7 +25,7 @@ namespace Lib.DataFlow
         {
             _Subject<T>.Register(this, StackTraceHolder.New(3).GetName(false));
             Asr.IsFalse(scope.Completed);
-            scope.OnDispose(_Dispose);
+            scope.Subscribe(_Dispose);
             _next = NextPool.Get();
         }
 
@@ -78,7 +78,7 @@ namespace Lib.DataFlow
             _Subject.Register(this, StackTraceHolder.New(3).GetName(false));
             Asr.IsFalse(scope.Completed);
 
-            scope.OnDispose(_Dispose);
+            scope.Subscribe(_Dispose);
             _next = NextPool.Get();
         }
 

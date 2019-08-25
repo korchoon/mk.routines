@@ -64,7 +64,7 @@ namespace Lib.Templates
             var t = SceneManager.LoadSceneAsync(this, LoadSceneMode.Additive);
             while (!t.isDone) await Sch.Update;
 
-            scope.OnDispose(Dispose);
+            scope.Subscribe(Dispose);
 
             if (!activate)
                 return;

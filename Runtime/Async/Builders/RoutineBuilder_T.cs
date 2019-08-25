@@ -26,7 +26,7 @@ namespace Lib.Async
         RoutineBuilder()
         {
             Task = new Routine<T>();
-            Task.Scope.OnDispose(BreakCurrent);
+            Task.Scope.Subscribe(BreakCurrent);
         }
 
         void BreakCurrent()
@@ -54,7 +54,7 @@ namespace Lib.Async
         [UsedImplicitly]
         public void SetResult(T value)
         {
-            if (Task.Scope.Completed)
+            if (Task.Scope.Disposing)
                 return;
 
             Task.SetResult(value);
