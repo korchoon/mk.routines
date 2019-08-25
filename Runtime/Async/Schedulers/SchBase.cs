@@ -5,9 +5,9 @@
 // ----------------------------------------------------------------------------
 
 using System;
-using Lib.DataFlow;
+using Reactors.DataFlow;
 
-namespace Lib.Async
+namespace Reactors.Async
 {
     public class SchBase<T> : ISub<T>
     {

@@ -5,9 +5,9 @@
 // ----------------------------------------------------------------------------
 
 using System;
-using Lib.Utility;
+using Reactors.Utility;
 
-namespace Lib.DataFlow
+namespace Reactors.DataFlow
 {
     public class CachedSubject : IPub, ISub
     {

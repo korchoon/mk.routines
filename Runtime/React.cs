@@ -6,10 +6,10 @@
 
 using System;
 using JetBrains.Annotations;
-using Lib.DataFlow;
+using Reactors.DataFlow;
 using Utility.Asserts;
 
-namespace Lib
+namespace Reactors
 {
     public static class React
     {

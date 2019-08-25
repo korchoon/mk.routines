@@ -6,10 +6,10 @@
 
 using System;
 using System.Diagnostics;
-using Lib.Async;
-using Lib.DataFlow;
+using Reactors.Async;
+using Reactors.DataFlow;
 
-namespace Lib.Async.Debugger
+namespace Reactors.Async.Debugger
 {
     public class _Scope : DebugTracer<_Scope, IScope>
     {

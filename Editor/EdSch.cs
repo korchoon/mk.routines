@@ -4,8 +4,8 @@
 // Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
 
-using Lib.Async;
-using Lib.DataFlow;
+using Reactors.Async;
+using Reactors.DataFlow;
 
 namespace Unknown
 {

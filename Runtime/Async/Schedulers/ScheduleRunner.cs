@@ -6,16 +6,12 @@
 
 using System;
 using System.Collections;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using Lib.DataFlow;
-using Lib.Utility;
+using Reactors.DataFlow;
+using Reactors.Utility;
 using UnityEngine;
-using Utility;
 using Utility.Asserts;
-using Debug = UnityEngine.Debug;
 
-namespace Lib.Async
+namespace Reactors.Async
 {
     [Serializable]
     public class ScheduleSettings

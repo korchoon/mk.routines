@@ -5,15 +5,11 @@
 // ----------------------------------------------------------------------------
 
 using System;
-using System.ComponentModel;
 using JetBrains.Annotations;
-using Lib.Async;
-using Lib.DataFlow;
-using Lib.Timers;
-using UnityEngine;
-using UnityEngine.Events;
+using Reactors.Async;
+using Reactors.DataFlow;
 
-namespace Lib
+namespace Reactors
 {
     public static class ReactExperimental
     {

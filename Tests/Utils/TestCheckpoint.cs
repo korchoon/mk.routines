@@ -10,7 +10,7 @@ using NUnit.Framework;
 using UnityEngine;
 
 
-namespace Lib.UnitTests
+namespace Reactors.UnitTests
 {
     public class TestCheckpoint<TEnum>
     {

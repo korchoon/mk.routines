@@ -9,11 +9,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
-using Lib.DataFlow;
+using Reactors.DataFlow;
 using Utility;
 using Utility.Asserts;
 
-namespace Lib.Async
+namespace Reactors.Async
 {
     public abstract class DebugTracer<TEvents, TTarget> where TEvents : DebugTracer<TEvents, TTarget>, new() where TTarget : class
     {

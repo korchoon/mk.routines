@@ -11,7 +11,7 @@ using UnityEngine;
 using Utility.Asserts;
 
 
-namespace Lib.Utility
+namespace Reactors.Utility
 {
     [Serializable,]
     public struct Option<T> : IEquatable<Option<T>>, IComparable<Option<T>>

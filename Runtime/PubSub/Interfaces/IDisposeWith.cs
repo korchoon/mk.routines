@@ -6,7 +6,7 @@
 
 using System;
 
-namespace Lib.DataFlow
+namespace Reactors.DataFlow
 {
     public interface IDisposeWith<in T> where T : Exception
     {

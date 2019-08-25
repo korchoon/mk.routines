@@ -5,9 +5,8 @@
 // ----------------------------------------------------------------------------
 
 using System;
-using System.Runtime.CompilerServices;
 
-namespace Lib.DataFlow
+namespace Reactors.DataFlow
 {
     public static class Empty
     {

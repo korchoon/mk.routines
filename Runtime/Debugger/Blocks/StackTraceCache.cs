@@ -7,7 +7,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Lib.DataFlow
+namespace Reactors.DataFlow
 {
     public class StackTraceCache
     {

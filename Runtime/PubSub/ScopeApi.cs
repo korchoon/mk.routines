@@ -6,10 +6,10 @@
 
 using System;
 using JetBrains.Annotations;
-using Lib.DataFlow;
-using Lib.Utility;
+using Reactors.DataFlow;
+using Reactors.Utility;
 
-namespace Lib
+namespace Reactors
 {
     public static class ScopeApi
     {

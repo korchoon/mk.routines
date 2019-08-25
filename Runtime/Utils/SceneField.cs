@@ -7,8 +7,8 @@
 using System;
 using System.IO;
 using System.Linq;
-using Lib.Async;
-using Lib.DataFlow;
+using Reactors.Async;
+using Reactors.DataFlow;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
@@ -19,7 +19,7 @@ using Sirenix.OdinInspector;
 
 #pragma warning disable 649
 
-namespace Lib.Templates
+namespace Reactors.Templates
 {
     [Serializable]
 #if ODIN_INSPECTOR

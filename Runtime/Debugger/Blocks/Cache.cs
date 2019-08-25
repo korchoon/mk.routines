@@ -6,7 +6,7 @@
 
 using System.Collections.Generic;
 
-namespace Lib.DataFlow
+namespace Reactors.DataFlow
 {
     public class Cache<T>
     {

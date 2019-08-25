@@ -5,10 +5,10 @@
 // ----------------------------------------------------------------------------
 
 using System;
-using Lib.Async.Debugger;
-using Lib.DataFlow;
+using Reactors.Async.Debugger;
+using Reactors.DataFlow;
 
-namespace Lib.Async.Debugger
+namespace Reactors.Async.Debugger
 {
     public class _GenericAwaiter2 : DebugTracer2<_GenericAwaiter2, GenericAwaiter>
     {

@@ -6,12 +6,12 @@
 
 using System;
 using System.Collections.Generic;
-using Lib.Async.Debugger;
-using Lib.Attributes;
-using Lib.Pooling;
+using Reactors.Async.Debugger;
+using Reactors.Attributes;
+using Reactors.Pooling;
 using Utility.Asserts;
 
-namespace Lib.DataFlow
+namespace Reactors.DataFlow
 {
     internal class ScopeStack : IDisposable, IScope
     {

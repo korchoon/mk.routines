@@ -6,7 +6,7 @@
 
 using System;
 
-namespace Lib.Async
+namespace Reactors.Async
 {
     public class MethodScope : IDisposable
     {

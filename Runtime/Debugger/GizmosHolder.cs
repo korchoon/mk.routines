@@ -4,7 +4,7 @@
 // Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
 
-using Lib.DataFlow;
+using Reactors.DataFlow;
 using UnityEditor;
 using UnityEngine;
 

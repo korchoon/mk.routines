@@ -8,10 +8,10 @@
 
 using System;
 using System.Collections.Generic;
-using Lib.DataFlow;
+using Reactors.DataFlow;
 using Utility.Asserts;
 
-namespace Lib.Pooling
+namespace Reactors.Pooling
 {
     public class Pool<T> : IDisposable where T : class
     {

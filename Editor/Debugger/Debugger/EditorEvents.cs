@@ -7,6 +7,8 @@
 using System;
 using Lib;
 using Lib.DataFlow;
+using Reactors;
+using Reactors.DataFlow;
 using UnityEditor;
 using UnityEngine.Events;
 
@@ -23,7 +25,7 @@ namespace MyNamespace
             public EditorAppSubs(IScope scope)
             {
             }
-#if name
+#if TODO
              internal static UnityAction projectWasLoaded;
             internal static UnityAction editorApplicationQuit;
             public static EditorApplication.ProjectWindowItemCallback projectWindowItemOnGUI;
@@ -56,7 +58,7 @@ namespace MyNamespace
             UnityEditor.SceneView.beforeSceneGui += OnSceneViewOnBeforeSceneGui;
             UnityEditor.SceneView.duringSceneGui += OnSceneViewOnDuringSceneGui;
 
-            scope.OnDispose(() =>
+            scope.Subscribe(() =>
             {
                 UnityEditor.SceneView.beforeSceneGui -= OnSceneViewOnBeforeSceneGui;
                 UnityEditor.SceneView.duringSceneGui -= OnSceneViewOnDuringSceneGui;

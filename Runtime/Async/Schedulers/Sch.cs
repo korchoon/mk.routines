@@ -6,12 +6,12 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using Lib.DataFlow;
-using Lib.Utility;
+using Reactors.DataFlow;
+using Reactors.Utility;
 
-[assembly: InternalsVisibleTo("Lib.Reactors.Editor")]
+[assembly: InternalsVisibleTo("Reactors.Editor")]
 
-namespace Lib.Async
+namespace Reactors.Async
 {
     public static class SchPub
     {

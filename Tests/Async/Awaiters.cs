@@ -5,8 +5,8 @@
 // ----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-using Lib;
-using Lib.Async;
+using Reactors;
+using Reactors.Async;
 using NUnit.Framework;
 using Utility.Asserts;
 

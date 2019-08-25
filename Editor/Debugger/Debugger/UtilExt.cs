@@ -5,8 +5,8 @@
 // ----------------------------------------------------------------------------
 
 using System;
-using Lib;
-using Lib.DataFlow;
+using Reactors;
+using Reactors.DataFlow;
 
 namespace MyNamespace
 {

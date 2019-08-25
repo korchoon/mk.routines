@@ -5,10 +5,10 @@
 // ----------------------------------------------------------------------------
 
 using System;
-using Lib.Async;
+using Reactors.Async;
 using Utility.Asserts;
 
-namespace Lib.DataFlow
+namespace Reactors.DataFlow
 {
     public static class UtilsOnce
     {

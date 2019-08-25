@@ -5,9 +5,9 @@
 // ----------------------------------------------------------------------------
 
 using System;
-using Lib.DataFlow;
+using Reactors.DataFlow;
 
-namespace Lib.Async.Debugger
+namespace Reactors.Async.Debugger
 {
     public class _RoutineBuilder : DebugTracer2<_RoutineBuilder, RoutineBuilder>
     {
