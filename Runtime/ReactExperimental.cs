@@ -17,23 +17,6 @@ namespace Lib
 {
     public static class ReactExperimental
     {
-        [MustUseReturnValue]
-        // single-next, single-onnext 
-        internal static (IPub<T> pub, ISub<T> sub) PubSub11<T>(this IScope scope)
-        {
-            var subject = new Subject<T>(scope);
-            return (subject, subject);
-        }
-
-        [MustUseReturnValue]
-        // single-next, single-onnext 
-        internal static (IPub pub, ISub sub) PubSub11(this IScope scope)
-        {
-            var (pub, sub) = (scope).PubSub();
-            return (pub, sub);
-        }
-
-
         public static CachedSubject<T> FromEventCached<T>(Action<Action<T>> sub, Action<Action<T>> unsub, IScope scope)
         {
             var s = new CachedSubject<T>(scope);
@@ -128,12 +111,6 @@ namespace Lib
             return pub1;
 
             void Pub(T msg) => proxy.Invoke(msg, pub);
-        }
-
-        [MustUseReturnValue]
-        internal static IDisposeWith<Exception> ErrScope(out IErrorScope<Exception> scope)
-        {
-            return new CatchStack(out scope);
         }
 
         public static ISub<T> ToSub<T>(Func<IPub<T>, Routine> ctor, IScope scope)

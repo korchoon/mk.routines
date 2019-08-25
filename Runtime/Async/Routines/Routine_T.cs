@@ -24,8 +24,8 @@ namespace Lib.Async
         internal IPub Complete;
 
         internal IScope Scope;
-        IDisposable _pubScope;
-        
+        internal IDisposable _Dispose;
+
         Option<T> _result;
         IScope _awaitersScope;
 
@@ -40,19 +40,19 @@ namespace Lib.Async
         internal Routine()
         {
             ISub onComplete;
-            _pubScope = Sch.Scope.Scope(out Scope);
+            _Dispose = Sch.Scope.Scope(out Scope);
             Scope.Scope(out _awaitersScope);
             (Complete, onComplete) = Scope.PubSub();
             onComplete.OnNext(Dispose, Scope);
         }
 
         [UsedImplicitly]
-        public GenericAwaiter2<T> GetAwaiter()
+        public GenericAwaiter<T> GetAwaiter()
         {
-            var aw = new GenericAwaiter2(_awaitersScope, Dispose);
-            return new GenericAwaiter2<T>(aw, () => _result.GetOrFail());
+            var aw = new GenericAwaiter(_awaitersScope, Dispose);
+            return new GenericAwaiter<T>(aw, () => _result.GetOrFail());
         }
 
-        public void Dispose() => _pubScope.Dispose();
+        public void Dispose() => _Dispose.Dispose();
     }
 }

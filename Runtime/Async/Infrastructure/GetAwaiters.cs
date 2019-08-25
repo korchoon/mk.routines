@@ -57,14 +57,14 @@ namespace Lib.Async
             }
         }
 
-        public static GenericAwaiter2<T> GetAwaiter<T>(this ISub<T> s)
+        public static GenericAwaiter<T> GetAwaiter<T>(this ISub<T> s)
         {
             var result = new Option<T>();
             var d = Sch.Scope.Scope(out var scope);
             bool done = false;
             s.OnNext(Maybe, scope);
-            var res1 = new GenericAwaiter2(scope, () => done = true);
-            var res = new GenericAwaiter2<T>(res1, () => result.GetOrFail());
+            var res1 = new GenericAwaiter(scope, () => done = true);
+            var res = new GenericAwaiter<T>(res1, () => result.GetOrFail());
             return res;
 
             void Maybe(T msg)
@@ -75,13 +75,13 @@ namespace Lib.Async
             }
         }
 
-        public static GenericAwaiter2 GetAwaiter(this ISub aw)
+        public static GenericAwaiter GetAwaiter(this ISub aw)
         {
             var d = Sch.Scope.Scope(out var scope);
 
             bool done = false;
             aw.OnNext(Maybe, scope);
-            var res = new GenericAwaiter2(scope, () => done = true);
+            var res = new GenericAwaiter(scope, () => done = true);
             return res;
 
             void Maybe()
@@ -91,7 +91,7 @@ namespace Lib.Async
             }
         }
 
-        public static GenericAwaiter2 GetAwaiter(this IScope outer)
+        public static GenericAwaiter GetAwaiter(this IScope outer)
         {
             var d = Sch.Scope.Scope(out var scope);
             var (pub, sub) = outer.PubSub();
@@ -105,13 +105,13 @@ namespace Lib.Async
             });
 
             sub.OnNext(d.Dispose, outer);
-            return new GenericAwaiter2(scope, d.Dispose);
+            return new GenericAwaiter(scope, d.Dispose);
         }
 
-        public static GenericAwaiter2 GetAwaiter(this float sec) => Delay(sec, DefaultSch).GetAwaiter();
+        public static GenericAwaiter GetAwaiter(this float sec) => Delay(sec, DefaultSch).GetAwaiter();
 
-        public static GenericAwaiter2 GetAwaiter(this int sec) => GetAwaiter((float) sec);
-        public static GenericAwaiter2 GetAwaiter(this double sec) => GetAwaiter((float) sec);
+        public static GenericAwaiter GetAwaiter(this int sec) => GetAwaiter((float) sec);
+        public static GenericAwaiter GetAwaiter(this double sec) => GetAwaiter((float) sec);
 
 
         public static IScope Delay(float seconds, ISub s)

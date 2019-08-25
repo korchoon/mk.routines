@@ -16,6 +16,6 @@ namespace Lib.Async.Debugger
         public Action<ISub> InitComplete;
         public Action<IScope> InitScope;
         public Action Dispose;
-        public Action<GenericAwaiter2> GetAwaiter;
+        public Action<GenericAwaiter> GetAwaiter;
     }
 }

@@ -228,12 +228,15 @@ namespace AsyncTests.Async
                 void Asserts()
                 {
                     Assert.IsNotNull(r1Scope);
+                    Assert.IsTrue(r1Scope.Disposing);
+                    Assert.IsFalse(r1Scope.Completed);
                     Assert.IsTrue(completed);
                 }
 
                 async Routine<int> Routine1()
                 {
                     r1Scope = await Routine.SelfScope();
+                    r1Scope.Subscribe(() => completed = true);
 
                     await sub;
                     return 42;

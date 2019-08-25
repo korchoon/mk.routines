@@ -80,6 +80,10 @@ namespace Lib.Async
                     selfScopeAwaiter.Value = Task.Scope;
                     awaiter.OnCompleted(_continuation);
                     break;
+                case SelfDisposeAwaiter selfDisposeAwaiter:
+                    selfDisposeAwaiter.Value = Task._Dispose;
+                    awaiter.OnCompleted(_continuation);
+                    break;
                 default:
                     Asr.Fail("passed unbreakable awaiter");
                     break;
