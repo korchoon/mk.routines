@@ -99,7 +99,7 @@ namespace Lib
         [NonPerformant(PerfKind.GC)]
         public static ISub<(bool, bool, bool, bool)> Of(IScope scope, ISub s1, ISub s2, ISub s3, ISub s4)
         {
-            var (pub, sub) = scope.Channel<(bool, bool, bool, bool)>();
+            var (pub, sub) = React.PubSub<(bool, bool, bool, bool)>(scope);
 
             s1.OnNext(() => pub.Next((true, default, default, default)),scope);
             s2.OnNext(() => pub.Next((default, true, default, default)),scope);

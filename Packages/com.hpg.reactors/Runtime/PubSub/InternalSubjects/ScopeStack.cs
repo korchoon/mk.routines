@@ -16,7 +16,7 @@ namespace Lib.DataFlow
     internal class ScopeStack : IDisposable, IScope
     {
         List<Action> _stack;
-        bool _started;
+        public bool Disposing { get; private set; }
         static Pool<List<Action>> Pool { get; } = new Pool<List<Action>>(() => new List<Action>(), subs => subs.Clear());
 
         public ScopeStack()
@@ -32,9 +32,9 @@ namespace Lib.DataFlow
         public void Dispose()
         {
             if (Completed) return;
-            if (_started) return; // todo turn off and reproduce
-            
-            _started = true;
+            if (Disposing) return; // todo turn off and reproduce
+
+            Disposing = true;
 
             for (var i = _stack.Count - 1; i >= 0; i--)
             {
@@ -58,7 +58,7 @@ namespace Lib.DataFlow
 
         public bool Completed { get; private set; }
 
-        public void OnDispose(Action dispose)
+        public void Subscribe(Action dispose)
         {
             if (Completed)
             {
@@ -73,7 +73,7 @@ namespace Lib.DataFlow
         [NonPerformant(PerfKind.TimeHeavy)]
         public void Unsubscribe(Action dispose)
         {
-            if (_started || Completed)
+            if (Disposing || Completed)
             {
 //                Asr.Fail("Cannot unsubscribe during or after disposal");
                 return;

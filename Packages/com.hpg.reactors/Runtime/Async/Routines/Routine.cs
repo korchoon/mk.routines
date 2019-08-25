@@ -18,31 +18,31 @@ namespace Lib.Async
     public sealed class Routine : IDisposable
     {
         internal IPub Complete;
-        ISub _onComplete;
 
         internal IScope Scope;
         IDisposable _pubScope;
+        IScope _awaitersScope;
 
         public IScope GetScope(IScope scope)
         {
-            scope.OnDispose(Dispose);
+            scope.Subscribe(Dispose);
             return Scope;
         }
 
         internal Routine()
         {
-            _pubScope = React.Scope(out Scope);
-            (Complete, _onComplete) = Scope.PubSub();
-            _onComplete.OnNext(Dispose, Scope);
+            ISub onComplete;
+            _pubScope = Sch.Scope.Scope(out Scope);
+            Scope.Scope(out _awaitersScope);
+            (Complete, onComplete) = Scope.PubSub();
+            onComplete.OnNext(Dispose, Scope);
         }
 
         [UsedImplicitly]
         public GenericAwaiter2 GetAwaiter()
         {
-            if (!Scope.Completed)
-                _onComplete.OnNext(Dispose, Scope);
-
-            return new GenericAwaiter2(Scope, Dispose);
+            var res = new GenericAwaiter2(_awaitersScope, Dispose);
+            return res;
         }
 
         public void Dispose() => _pubScope.Dispose();

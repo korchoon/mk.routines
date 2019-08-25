@@ -96,8 +96,8 @@ namespace Lib
         {
             var dispose = React.Scope(out res);
             Action action = dispose.Dispose;
-            res.OnDispose(_Remove);
-            outer.OnDispose(action);
+            res.Subscribe(_Remove);
+            outer.Subscribe(action);
             return dispose;
 
             void _Remove() => outer.Unsubscribe(action);
@@ -105,8 +105,8 @@ namespace Lib
 
         internal static void Subscribe(this IScope target, Action dispose, IScope unsubScope)
         {
-            target.OnDispose(dispose);
-            unsubScope.OnDispose(_Remove);
+            target.Subscribe(dispose);
+            unsubScope.Subscribe(_Remove);
 
             void _Remove() => target.Unsubscribe(dispose);
         }

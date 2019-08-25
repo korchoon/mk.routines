@@ -16,7 +16,7 @@ namespace Lib
         [MustUseReturnValue]
         public static (IPub pub, ISub sub) PubSub(this IScope scope)
         {
-            Asr.IsFalse(scope.Completed);
+            Asr.IsFalse(scope.Disposing);
             var subject = new Subject(scope);
             return (subject, subject);
         }
@@ -27,12 +27,6 @@ namespace Lib
             var subject = new Subject<T>(scope);
             return (subject, subject);
         }
-
-        [MustUseReturnValue, Obsolete("Use PubSub instead")]
-        public static (IPub pub, ISub sub) Channel(this IScope scope) => PubSub(scope);
-
-        [MustUseReturnValue, Obsolete("Use PubSub instead")]
-        public static (IPub<T> pub, ISub<T> sub) Channel<T>(this IScope scope) => PubSub<T>(scope);
 
         [MustUseReturnValue]
         public static IDisposable Scope(out IScope scope)

@@ -91,7 +91,7 @@ namespace Unknown
         static async Routine EditMode(IScope scope)
         {
             var g = new GameObject() {hideFlags = HideFlags.DontSaveInEditor};
-            scope.OnDispose(() => Object.DestroyImmediate(g));
+            scope.Subscribe(() => Object.DestroyImmediate(g));
 
 
             var (pubGizmos, onGizmos) = React.PubSub(scope);
