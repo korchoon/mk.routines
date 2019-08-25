@@ -39,7 +39,7 @@ namespace Merge.View
             var (pub, sub) = React.PubSub(sd);
             var onClick = btn.onClick;
             onClick.AddListener(_Next);
-            sd.OnDispose(() => onClick.RemoveListener(_Next));
+            sd.Subscribe(() => onClick.RemoveListener(_Next));
             return sub;
 
             void _Next() => pub.Next();
@@ -70,7 +70,7 @@ namespace Merge.View
 
             var item = Ctor();
             et.triggers.Add(item);
-            sd.OnDispose(Dispose);
+            sd.Subscribe(Dispose);
 
             EventTrigger.Entry Ctor()
             {
@@ -80,7 +80,7 @@ namespace Merge.View
                     callback = new EventTrigger.TriggerEvent()
                 };
                 entry.callback.AddListener(Callb);
-                sd.OnDispose(() => entry.callback.RemoveListener(Callb));
+                sd.Subscribe(() => entry.callback.RemoveListener(Callb));
                 return entry;
             }
 

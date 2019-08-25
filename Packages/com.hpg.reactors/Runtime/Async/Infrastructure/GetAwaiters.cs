@@ -24,7 +24,7 @@ namespace Lib.Async
 
             var tt = factory.Invoke(cts.Token);
             var routine = _Inner(tt);
-            routine.GetScope(scope).OnDispose(cts.Dispose);
+            routine.GetScope(scope).Subscribe(cts.Dispose);
             return routine;
 
             async Routine _Inner(Task t)
@@ -43,8 +43,8 @@ namespace Lib.Async
 
             var tt = factory.Invoke(cts.Token);
             var routine = _Inner(tt);
-            scope.OnDispose(() => routine.Dispose());
-            routine.Scope.OnDispose(cts.Dispose);
+            scope.Subscribe(() => routine.Dispose());
+            routine.Scope.Subscribe(cts.Dispose);
             return routine;
 
             async Routine<T> _Inner(Task<T> t)
@@ -60,7 +60,7 @@ namespace Lib.Async
         public static GenericAwaiter2<T> GetAwaiter<T>(this ISub<T> s)
         {
             var result = new Option<T>();
-            var d = React.Scope(out var scope);
+            var d = Sch.Scope.Scope(out var scope);
             bool done = false;
             s.OnNext(Maybe, scope);
             var res1 = new GenericAwaiter2(scope, () => done = true);
@@ -77,7 +77,7 @@ namespace Lib.Async
 
         public static GenericAwaiter2 GetAwaiter(this ISub aw)
         {
-            var d = React.Scope(out var scope);
+            var d = Sch.Scope.Scope(out var scope);
 
             bool done = false;
             aw.OnNext(Maybe, scope);
@@ -93,9 +93,9 @@ namespace Lib.Async
 
         public static GenericAwaiter2 GetAwaiter(this IScope outer)
         {
-            var d = React.Scope(out var scope);
+            var d = Sch.Scope.Scope(out var scope);
             var (pub, sub) = outer.PubSub();
-            outer.OnDispose(() =>
+            outer.Subscribe(() =>
             {
                 if (scope.Completed)
                     return;
@@ -115,7 +115,7 @@ namespace Lib.Async
 
         public static IScope Delay(float seconds, ISub s)
         {
-            var pub = React.Scope(out var res);
+            var pub = Sch.Scope.Scope(out var res);
             var delay = new TimeToken(seconds, Time.time);
             s.OnNext(() =>
             {

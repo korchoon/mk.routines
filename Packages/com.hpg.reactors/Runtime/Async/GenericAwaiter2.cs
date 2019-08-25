@@ -43,7 +43,7 @@ namespace Lib.Async
             _break = onBreakInner;
 
             var (p, s) = _scope.PubSub();
-            _scope.OnDispose(p.Next);
+            _scope.Subscribe(p.Next);
             _continuations = s;
             _unsub = () => _scope.Unsubscribe(p.Next);
         }

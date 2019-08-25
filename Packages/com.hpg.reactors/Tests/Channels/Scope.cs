@@ -30,9 +30,9 @@ namespace AsyncTests.Channels
             var queue = new Queue<int>();
             using (React.Scope(out var scope))
             {
-                scope.OnDispose(() => queue.Enqueue(1));
-                scope.OnDispose(() => queue.Enqueue(2));
-                scope.OnDispose(() => queue.Enqueue(3));
+                scope.Subscribe(() => queue.Enqueue(1));
+                scope.Subscribe(() => queue.Enqueue(2));
+                scope.Subscribe(() => queue.Enqueue(3));
             }
 
             Assert.AreEqual(3, queue.Dequeue());
@@ -46,7 +46,7 @@ namespace AsyncTests.Channels
         {
             using (React.Scope(out var scope))
             {
-                scope.OnDispose(Disposal);
+                scope.Subscribe(Disposal);
                 scope.Unsubscribe(Disposal);
             }
 
@@ -65,7 +65,7 @@ namespace AsyncTests.Channels
             {
                 using (React.Scope(out var scope))
                 {
-                    scope.OnDispose(() => { });
+                    scope.Subscribe(() => { });
                     scope.Unsubscribe(() => { }); // throws
                 }
             }
@@ -77,7 +77,7 @@ namespace AsyncTests.Channels
             var dispose = React.Scope(out var scope);
             dispose.Dispose();
             var done = false;
-            scope.OnDispose(() => done = true);
+            scope.Subscribe(() => done = true);
             Assert.IsTrue(done);
         }
 
@@ -85,7 +85,7 @@ namespace AsyncTests.Channels
         public void CompletedAfterLast()
         {
             var dispose = React.Scope(out var scope);
-            scope.OnDispose(() => Assert.IsFalse(scope.Completed));
+            scope.Subscribe(() => Assert.IsFalse(scope.Completed));
             dispose.Dispose();
             Assert.IsTrue(scope.Completed);
         }

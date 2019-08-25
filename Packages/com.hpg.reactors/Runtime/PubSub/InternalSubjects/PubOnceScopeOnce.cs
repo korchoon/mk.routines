@@ -38,7 +38,7 @@ namespace Lib.DataFlow
 
         public bool Completed => _completed;
 
-        public void OnDispose(Action dispose)
+        public void Subscribe(Action dispose)
         {
             Asr.IsFalse(_completed);
             if (_completed)
@@ -93,7 +93,7 @@ namespace Lib.DataFlow
             return;
         }
 
-        public void OnDispose(Action dispose)
+        public void Subscribe(Action dispose)
         {
             Asr.IsFalse(_completed);
             if (_completed)

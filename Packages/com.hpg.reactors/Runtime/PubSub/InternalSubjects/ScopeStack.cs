@@ -58,7 +58,7 @@ namespace Lib.DataFlow
 
         public bool Completed { get; private set; }
 
-        public void OnDispose(Action dispose)
+        public void Subscribe(Action dispose)
         {
             if (Completed)
             {

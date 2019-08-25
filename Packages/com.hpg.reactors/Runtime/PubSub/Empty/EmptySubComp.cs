@@ -22,7 +22,7 @@ namespace Lib.DataFlow
 
         public bool Completed { get; }
 
-        public void OnDispose(Action dispose)
+        public void Subscribe(Action dispose)
         {
         }
 

@@ -23,7 +23,7 @@ namespace Lib.Async
         RoutineBuilder()
         {
             Task = new Routine();
-            Task.Scope.OnDispose(BreakCurrent);
+            Task.Scope.Subscribe(BreakCurrent);
         }
 
         void BreakCurrent()

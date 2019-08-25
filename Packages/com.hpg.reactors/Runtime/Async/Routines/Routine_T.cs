@@ -33,14 +33,14 @@ namespace Lib.Async
 
         public IScope GetScope(IScope scope)
         {
-            scope.OnDispose(Dispose);
+            scope.Subscribe(Dispose);
             return Scope;
         }
 
         internal Routine()
         {
             ISub onComplete;
-            _pubScope = React.Scope(out Scope);
+            _pubScope = Sch.Scope.Scope(out Scope);
             Scope.Scope(out _awaitersScope);
             (Complete, onComplete) = Scope.PubSub();
             onComplete.OnNext(Dispose, Scope);

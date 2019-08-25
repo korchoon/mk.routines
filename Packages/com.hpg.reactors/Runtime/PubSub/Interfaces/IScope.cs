@@ -11,7 +11,7 @@ namespace Lib.DataFlow
     public interface IScope
     {
         bool Completed { get; }
-        void OnDispose(Action dispose);
+        void Subscribe(Action dispose);
         void Unsubscribe(Action dispose);
     }
 }

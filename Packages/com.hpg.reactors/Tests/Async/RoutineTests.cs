@@ -161,7 +161,7 @@ namespace AsyncTests.Async
         [Test]
         public void GetScope_Disposed_TODO()
         {
-#if !M_TODO
+#if M_TODO
              using (React.Scope(out var scope))
             {
                 Routine closure = null;
@@ -265,7 +265,7 @@ namespace AsyncTests.Async
                 async Routine Routine1()
                 {
                     r1Scope = await Routine.SelfScope();
-                    r1Scope.OnDispose(() =>completed = true);
+                    r1Scope.Subscribe(() =>completed = true);
 
                     await sub;
                 }
