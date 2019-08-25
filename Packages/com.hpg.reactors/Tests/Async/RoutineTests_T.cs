@@ -3,6 +3,7 @@
 // Async Reactors framework https://github.com/korchoon/async-reactors
 // Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
+
 using System;
 using Lib;
 using Lib.Async;
@@ -209,6 +210,37 @@ namespace AsyncTests.Async
                 }
             }
         }
+
+        [Test]
+        public void Scope_Ends_Before_GetAwaiter_Continues()
+        {
+            using (React.Scope(out var outer))
+            {
+                var (pub, sub) = outer.PubSub();
+
+                IScope r1Scope = default;
+
+                bool completed = false;
+                var aw = Routine1().GetAwaiter();
+                aw.OnCompleted(Asserts);
+                pub.Next();
+
+                void Asserts()
+                {
+                    Assert.IsNotNull(r1Scope);
+                    Assert.IsTrue(completed);
+                }
+
+                async Routine<int> Routine1()
+                {
+                    r1Scope = await Routine.SelfScope();
+
+                    await sub;
+                    return 42;
+                }
+            }
+        }
+
 
         class _Never : ISub
         {

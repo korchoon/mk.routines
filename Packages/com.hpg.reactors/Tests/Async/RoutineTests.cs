@@ -3,10 +3,10 @@
 // Async Reactors framework https://github.com/korchoon/async-reactors
 // Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
+
 using System;
 using Lib;
 using Lib.Async;
-using Lib.Async.Debugger;
 using Lib.DataFlow;
 using NUnit.Framework;
 
@@ -145,7 +145,7 @@ namespace AsyncTests.Async
 
             var aw = s.GetAwaiter();
             Assert.IsFalse(aw.IsCompleted);
-            
+
             s.Dispose();
             Assert.IsTrue(aw.IsCompleted);
 
@@ -161,7 +161,7 @@ namespace AsyncTests.Async
         [Test]
         public void GetScope_Disposed_TODO()
         {
-#if M_TODO
+#if !M_TODO
              using (React.Scope(out var scope))
             {
                 Routine closure = null;
@@ -237,6 +237,36 @@ namespace AsyncTests.Async
 
                 async Routine Sample()
                 {
+                    await sub;
+                }
+            }
+        }
+
+        [Test]
+        public void Scope_Ends_Before_GetAwaiter_Continues()
+        {
+            using (React.Scope(out var outer))
+            {
+                var (pub, sub) = outer.PubSub();
+
+                IScope r1Scope = default;
+
+                bool completed = false;
+                var aw = Routine1().GetAwaiter();
+                aw.OnCompleted(Asserts);
+                pub.Next();
+
+                void Asserts()
+                {
+                    Assert.IsNotNull(r1Scope);
+                    Assert.IsTrue(completed);
+                }
+
+                async Routine Routine1()
+                {
+                    r1Scope = await Routine.SelfScope();
+                    r1Scope.OnDispose(() =>completed = true);
+
                     await sub;
                 }
             }
