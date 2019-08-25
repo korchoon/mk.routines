@@ -7,13 +7,11 @@
 using System;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
-using Lib.Async.Debugger;
 using Lib.DataFlow;
-using Lib.Utility;
 
 namespace Lib.Async
 {
-    public class GenericAwaiter2 : ICriticalNotifyCompletion, IBreakableAwaiter
+    public class GenericAwaiter : ICriticalNotifyCompletion, IBreakableAwaiter
     {
         readonly IScope _scope;
         readonly Action _break;
@@ -31,7 +29,7 @@ namespace Lib.Async
             _unsub.Invoke();
         }
 
-        public GenericAwaiter2(IScope scope, Action onBreakInner)
+        public GenericAwaiter(IScope scope, Action onBreakInner)
         {
             _scope = scope;
             if (_scope.Completed)
@@ -69,12 +67,12 @@ namespace Lib.Async
         public void UnsafeOnCompleted(Action continuation) => OnCompleted(continuation);
     }
 
-    public class GenericAwaiter2<T> : ICriticalNotifyCompletion, IBreakableAwaiter
+    public class GenericAwaiter<T> : ICriticalNotifyCompletion, IBreakableAwaiter
     {
-        readonly GenericAwaiter2 _aw;
+        readonly GenericAwaiter _aw;
         Func<T> _getResult;
 
-        public GenericAwaiter2(GenericAwaiter2 aw, Func<T> getResult)
+        public GenericAwaiter(GenericAwaiter aw, Func<T> getResult)
         {
             _aw = aw;
             _getResult = getResult;

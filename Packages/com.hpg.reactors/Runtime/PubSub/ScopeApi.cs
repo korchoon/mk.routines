@@ -15,7 +15,8 @@ namespace Lib
     {
         public static ISub<(Option<T1>, Option<T2>, Option<T3>)> BranchOf<T1, T2, T3>(this IScope scope, ISub<T1> s1, ISub<T2> s2, ISub<T3> s3)
         {
-            var (pub, sub) = scope.PubSub11<(Option<T1>, Option<T2>, Option<T3>)>();
+            var subject = new Subject<(Option<T1>, Option<T2>, Option<T3>)>(scope);
+            var (pub, sub) = ((IPub<(Option<T1>, Option<T2>, Option<T3>)> pub, ISub<(Option<T1>, Option<T2>, Option<T3>)> sub)) (subject, subject);
 
             s1.OnNext(msg => { pub.Next((msg, default, default)); }, scope);
             s2.OnNext(msg => { pub.Next((default, msg, default)); }, scope);
@@ -26,7 +27,8 @@ namespace Lib
 
         public static ISub<(bool, Option<T2>, Option<T3>)> BranchOf<T2, T3>(this IScope scope, ISub s1, ISub<T2> s2, ISub<T3> s3)
         {
-            var (pub, sub) = scope.PubSub11<(bool, Option<T2>, Option<T3>)>();
+            var subject = new Subject<(bool, Option<T2>, Option<T3>)>(scope);
+            var (pub, sub) = ((IPub<(bool, Option<T2>, Option<T3>)> pub, ISub<(bool, Option<T2>, Option<T3>)> sub)) (subject, subject);
 
             s1.OnNext(() => { pub.Next((true, default, default)); }, scope);
             s2.OnNext(msg => { pub.Next((default, msg, default)); }, scope);
@@ -37,7 +39,8 @@ namespace Lib
 
         public static ISub<(bool, Option<T2>)> BranchOf<T2>(this IScope scope, ISub s1, ISub<T2> s2)
         {
-            var (pub, sub) = scope.PubSub11<(bool, Option<T2>)>();
+            var subject = new Subject<(bool, Option<T2>)>(scope);
+            var (pub, sub) = ((IPub<(bool, Option<T2>)> pub, ISub<(bool, Option<T2>)> sub)) (subject, subject);
 
             s1.OnNext(() => { pub.Next((true, default)); }, scope);
             s2.OnNext(msg => { pub.Next((default, msg)); }, scope);
@@ -48,7 +51,8 @@ namespace Lib
 
         public static ISub<(Option<T1>, Option<T2>)> BranchOf<T1, T2>(this IScope scope, ISub<T1> s1, ISub<T2> s2)
         {
-            var (pub, sub) = scope.PubSub11<(Option<T1>, Option<T2>)>();
+            var subject = new Subject<(Option<T1>, Option<T2>)>(scope);
+            var (pub, sub) = ((IPub<(Option<T1>, Option<T2>)> pub, ISub<(Option<T1>, Option<T2>)> sub)) (subject, subject);
 
             s1.OnNext(msg => { pub.Next((msg, default)); }, scope);
             s2.OnNext(msg => { pub.Next((default, msg)); }, scope);
@@ -58,7 +62,8 @@ namespace Lib
 
         public static ISub<(Option<T>, bool, bool)> BranchOf<T>(this IScope scope, ISub<T> s1, ISub s2, ISub s3)
         {
-            var (pub, sub) = scope.PubSub11<(Option<T>, bool, bool)>();
+            var subject = new Subject<(Option<T>, bool, bool)>(scope);
+            var (pub, sub) = ((IPub<(Option<T>, bool, bool)> pub, ISub<(Option<T>, bool, bool)> sub)) (subject, subject);
             var res = sub;
 
             s1.OnNext(msg => { pub.Next((msg, false, false)); }, scope);
@@ -70,7 +75,8 @@ namespace Lib
 
         public static ISub<(bool, bool, bool)> BranchOf(this IScope scope, ISub s1, ISub s2, ISub s3)
         {
-            var (pub, sub) = scope.PubSub11<(bool, bool, bool)>();
+            var subject = new Subject<(bool, bool, bool)>(scope);
+            var (pub, sub) = ((IPub<(bool, bool, bool)> pub, ISub<(bool, bool, bool)> sub)) (subject, subject);
             var res = sub;
 
             s1.OnNext(() => { pub.Next((true, false, false)); }, scope);
@@ -82,7 +88,8 @@ namespace Lib
 
         public static ISub<(bool, bool)> BranchOf(this IScope scope, ISub s1, ISub s2)
         {
-            var (pub, sub) = scope.PubSub11<(bool, bool)>();
+            var subject = new Subject<(bool, bool)>(scope);
+            var (pub, sub) = ((IPub<(bool, bool)> pub, ISub<(bool, bool)> sub)) (subject, subject);
             var res = sub;
 
             s1.OnNext(() => { pub.Next((true, false)); }, scope);

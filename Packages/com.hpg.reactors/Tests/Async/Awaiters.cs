@@ -15,13 +15,13 @@ namespace AsyncTests.Async
     [TestFixture]
     public class Awaiters
     {
-        static IDisposable AwaiterScope(out (GenericAwaiter2 Awaiter, Action NextAwait) res)
+        static IDisposable AwaiterScope(out (GenericAwaiter Awaiter, Action NextAwait) res)
         {
             var d = React.Scope(out var scope);
             var (next, onNext) = scope.PubSub();
 
             onNext.OnNext(d.Dispose, scope);
-            var awaiter = new GenericAwaiter2(scope, d.Dispose);
+            var awaiter = new GenericAwaiter(scope, d.Dispose);
             res = (awaiter, next.Next);
             return d;
         }
