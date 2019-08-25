@@ -51,7 +51,7 @@ namespace Lib.Async
         [UsedImplicitly]
         public void SetResult()
         {
-            if (Task.Scope.Completed)
+            if (Task.Scope.Disposing)
                 return;
          
             Task.Complete.Next();

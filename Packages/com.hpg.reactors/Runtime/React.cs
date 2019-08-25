@@ -16,7 +16,7 @@ namespace Lib
         [MustUseReturnValue]
         public static (IPub pub, ISub sub) PubSub(this IScope scope)
         {
-            Asr.IsFalse(scope.Completed);
+            Asr.IsFalse(scope.Disposing);
             var subject = new Subject(scope);
             return (subject, subject);
         }

@@ -37,7 +37,7 @@ namespace Lib.Async
             }
         }
 
-         public static Routine<T> Convert<T>(Func<CancellationToken, Task<T>> factory, IScope scope)
+        public static Routine<T> Convert<T>(Func<CancellationToken, Task<T>> factory, IScope scope)
         {
             var cts = new CancellationTokenSource();
 
@@ -99,6 +99,7 @@ namespace Lib.Async
             {
                 if (scope.Completed)
                     return;
+                
                 pub.Next();
                 d.Dispose();
             });
