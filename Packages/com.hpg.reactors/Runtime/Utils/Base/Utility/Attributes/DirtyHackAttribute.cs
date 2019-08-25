@@ -6,7 +6,7 @@
 
 using System;
 
-namespace Lib.Attributes
+namespace Reactors.Attributes
 {
     public class DirtyHackAttribute : Attribute
     {

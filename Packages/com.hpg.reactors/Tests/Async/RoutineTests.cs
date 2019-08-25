@@ -5,9 +5,9 @@
 // ----------------------------------------------------------------------------
 
 using System;
-using Lib;
-using Lib.Async;
-using Lib.DataFlow;
+using Reactors;
+using Reactors.Async;
+using Reactors.DataFlow;
 using NUnit.Framework;
 
 namespace AsyncTests.Async

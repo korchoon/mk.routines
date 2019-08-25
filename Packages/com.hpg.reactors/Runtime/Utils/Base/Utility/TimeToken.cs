@@ -4,7 +4,7 @@
 // Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
 
-namespace Lib.Timers
+namespace Reactors.Timers
 {
     public struct TimeToken
     {

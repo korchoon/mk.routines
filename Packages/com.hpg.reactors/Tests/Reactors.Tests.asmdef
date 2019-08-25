@@ -1,7 +1,7 @@
 {
-    "name": "Lib.Reactrors.Tests",
+    "name": "Reactors.Tests",
     "references": [
-        "Lib.Reactors"
+        "Reactors"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"

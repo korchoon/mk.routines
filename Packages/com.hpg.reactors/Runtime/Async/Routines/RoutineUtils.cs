@@ -6,9 +6,9 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using Lib.DataFlow;
+using Reactors.DataFlow;
 
-namespace Lib.Async
+namespace Reactors.Async
 {
     internal static class RoutineUtils
     {

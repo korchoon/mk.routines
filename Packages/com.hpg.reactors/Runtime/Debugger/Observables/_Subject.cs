@@ -5,9 +5,9 @@
 // ----------------------------------------------------------------------------
 
 using System;
-using Lib.DataFlow;
+using Reactors.DataFlow;
 
-namespace Lib.Async.Debugger
+namespace Reactors.Async.Debugger
 {
     internal class _Subject<T> : DebugTracer2<_Subject<T>, Subject<T>>
     {

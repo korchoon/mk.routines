@@ -11,7 +11,7 @@ using System.Linq;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace Lib.DataFlow
+namespace Reactors.DataFlow
 {
     [HideReferenceObjectPicker, InlineProperty]
     public class StackTraceHolder

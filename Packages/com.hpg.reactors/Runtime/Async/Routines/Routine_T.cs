@@ -10,13 +10,13 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
-using Lib.DataFlow;
-using Lib.Utility;
+using Reactors.DataFlow;
+using Reactors.Utility;
 using Utility;
 using Utility.Asserts;
 using Debug = UnityEngine.Debug;
 
-namespace Lib.Async
+namespace Reactors.Async
 {
     [AsyncMethodBuilder(typeof(RoutineBuilder<>))]
     public sealed class Routine<T> : IDisposable

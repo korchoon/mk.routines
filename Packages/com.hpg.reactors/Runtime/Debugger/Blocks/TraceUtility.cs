@@ -10,7 +10,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-namespace Lib.DataFlow
+namespace Reactors.DataFlow
 {
     public static class TraceUtility
     {

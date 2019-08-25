@@ -6,7 +6,7 @@
 
 using System;
 
-namespace Lib.Pooling
+namespace Reactors.Pooling
 {
     [Serializable]
     public class DebugPoolCounter

@@ -5,13 +5,13 @@
 // ----------------------------------------------------------------------------
 
 using System;
-using Lib.Async;
-using Lib.Async.Debugger;
-using Lib.Attributes;
-using Lib.Pooling;
+using Reactors.Async;
+using Reactors.Attributes;
+using Reactors.Async.Debugger;
+using Reactors.Pooling;
 using Utility.Asserts;
 
-namespace Lib.DataFlow
+namespace Reactors.DataFlow
 {
     internal class Subject<T> : ISub<T>, IPub<T>
     {

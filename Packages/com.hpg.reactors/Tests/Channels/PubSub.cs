@@ -3,7 +3,7 @@
 // Async Reactors framework https://github.com/korchoon/async-reactors
 // Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
-using Lib;
+using Reactors;
 using NUnit.Framework;
 using Utility.Asserts;
 

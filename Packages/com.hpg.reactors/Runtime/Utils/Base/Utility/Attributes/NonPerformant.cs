@@ -6,7 +6,7 @@
 
 using System;
 
-namespace Lib.Attributes
+namespace Reactors.Attributes
 {
     [AttributeUsage(AttributeTargets.All)]
     public class NonPerformant : Attribute

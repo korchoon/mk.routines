@@ -8,12 +8,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Game.Proto;
-using Lib.Async;
-using Lib.Attributes;
-using Lib.Utility;
+using Reactors.Async;
+using Reactors.Attributes;
+using Reactors.Utility;
 using Utility.Asserts;
 
-namespace Lib.DataFlow
+namespace Reactors.DataFlow
 {
     internal sealed class Subscribers : IPub
     {

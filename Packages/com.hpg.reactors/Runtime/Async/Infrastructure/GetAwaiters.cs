@@ -7,12 +7,12 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Lib.DataFlow;
-using Lib.Timers;
-using Lib.Utility;
+using Reactors.DataFlow;
+using Reactors.Timers;
+using Reactors.Utility;
 using UnityEngine;
 
-namespace Lib.Async
+namespace Reactors.Async
 {
     public static class GetAwaiters
     {

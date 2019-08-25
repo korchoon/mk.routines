@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Lib.Utility
+namespace Reactors.Utility
 {
     public static class Option
     {

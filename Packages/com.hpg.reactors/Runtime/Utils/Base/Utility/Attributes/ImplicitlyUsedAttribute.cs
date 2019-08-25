@@ -6,7 +6,7 @@
 
 using System;
 
-namespace Lib.EditorLib.Inspector
+namespace Reactors.EditorLib.Inspector
 {
     /// <summary>
     /// Goal is strictly informative: report developer to know where to find implicit dependencies

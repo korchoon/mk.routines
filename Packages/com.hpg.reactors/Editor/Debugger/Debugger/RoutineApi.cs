@@ -4,9 +4,8 @@
 // Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
 
-using Lib.Async;
-using Lib.DataFlow;
-using UnityEditor;
+using Reactors.Async;
+using Reactors.DataFlow;
 using UnityEngine;
 
 namespace MyNamespace

@@ -10,12 +10,12 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
-using Lib.DataFlow;
+using Reactors.DataFlow;
 using Utility;
 using Utility.Asserts;
 using Debug = UnityEngine.Debug;
 
-namespace Lib.Async.Debugger
+namespace Reactors.Async.Debugger
 {
     public abstract class DebugTracer2<TEvents, TTarget> where TEvents : DebugTracer2<TEvents, TTarget>, new() where TTarget : class
     {

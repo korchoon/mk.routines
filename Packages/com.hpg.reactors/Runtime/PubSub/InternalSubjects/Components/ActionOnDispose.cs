@@ -7,9 +7,9 @@
 using System;
 using Game.Proto;
 using JetBrains.Annotations;
-using Lib.DataFlow;
+using Reactors.DataFlow;
 
-namespace Lib.Utility
+namespace Reactors.Utility
 {
     internal class ActionOnDispose : IDisposable
     {

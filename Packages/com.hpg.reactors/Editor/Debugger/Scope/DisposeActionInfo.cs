@@ -5,6 +5,7 @@
 // ----------------------------------------------------------------------------
 
 using System;
+using Reactors.DataFlow;
 using Sirenix.OdinInspector;
 
 namespace Lib.DataFlow

@@ -7,14 +7,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using Lib.Utility;
-using UnityEngine;
 using UnityEngine.Assertions;
 
-[assembly: InternalsVisibleTo("Lib.Reactrors.Tests")]
+[assembly: InternalsVisibleTo("Reactors.Tests")]
 
 namespace Utility.Asserts
 {

@@ -6,16 +6,16 @@
 
 using System;
 using JetBrains.Annotations;
-using Lib.Attributes;
-using Lib.DataFlow;
-using Lib.Utility;
+using Reactors.Attributes;
+using Reactors.DataFlow;
+using Reactors.Utility;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.UI;
 using Utility.Asserts;
 
-namespace Lib
+namespace Reactors
 {
     [NonPerformant(PerfKind.GC)]
     public static class SetActiveScopeApi

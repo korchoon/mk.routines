@@ -7,9 +7,9 @@
 using System;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
-using Lib.DataFlow;
+using Reactors.DataFlow;
 
-namespace Lib.Async
+namespace Reactors.Async
 {
     public class GenericAwaiter : ICriticalNotifyCompletion, IBreakableAwaiter
     {

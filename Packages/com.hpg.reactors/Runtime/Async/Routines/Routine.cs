@@ -7,12 +7,12 @@
 using System;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
-using Lib.Async.Debugger;
-using Lib.DataFlow;
-using Lib.Utility;
+using Reactors.Async.Debugger;
+using Reactors.Utility;
+using Reactors.DataFlow;
 using Utility.Asserts;
 
-namespace Lib.Async
+namespace Reactors.Async
 {
     [AsyncMethodBuilder(typeof(RoutineBuilder))]
     public sealed class Routine : IDisposable

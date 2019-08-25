@@ -8,11 +8,11 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Security;
 using JetBrains.Annotations;
-using Lib.DataFlow;
+using Reactors.DataFlow;
 using Utility.Asserts;
 using Debug = UnityEngine.Debug;
 
-namespace Lib.Async
+namespace Reactors.Async
 {
     public class RoutineBuilder
     {

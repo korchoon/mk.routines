@@ -11,7 +11,7 @@ using System.Linq;
 using UnityEditor;
 using Utility.Asserts;
 
-namespace Lib
+namespace Reactors
 {
     public static class ScriptingDefineUtil
     {
