@@ -9,6 +9,7 @@ using Lib;
 using Lib.Async;
 using Lib.DataFlow;
 using NUnit.Framework;
+
 #pragma warning disable 4014
 #pragma warning disable 1998
 
@@ -161,10 +162,9 @@ namespace AsyncTests.Async
         }
 
         [Test]
-        public void GetScope_Disposed_TODO()
+        public void GetScope_Disposed()
         {
-#if M_TODO
-             using (React.Scope(out var scope))
+            using (React.Scope(out var scope))
             {
                 Routine closure = null;
                 var r = Outer();
@@ -183,7 +183,6 @@ namespace AsyncTests.Async
                     await _Never.Instance;
                 }
             }
-#endif
         }
 
         [Test]

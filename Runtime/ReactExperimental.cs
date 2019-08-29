@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 using Lib.Async;
 using Lib.DataFlow;
 using Lib.Timers;
+using Lib.Utility;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -44,32 +45,7 @@ namespace Lib
             var scopeAwaiter = sec.GetAwaiter();
             scopeAwaiter.UnsafeOnCompleted(continuation);
         }
-        public static Func<ISub<T>> FromRoutine<T>(this Func<Routine<T>> callback, IScope scope)
-        {
-            return DynamicMethod;
 
-            ISub<T> DynamicMethod()
-            {
-                var routine = callback.Invoke();
-                var (p, s) = scope.PubSub<T>();
-
-                scope.Subscribe(routine.Dispose);
-                var aw = routine.GetAwaiter();
-                routine.Scope.Subscribe(() =>
-                {
-                    try
-                    {
-                        var r = aw.GetResult();
-                        p.Next(r);
-                    }
-                    catch 
-                    {
-//                        Debug.Log(e); // todo testcase
-                    }
-                });
-                return s;
-            }
-        }
 
         [MustUseReturnValue]
         public static (IDisposable disposable, IScope scope) ScopeTuple()
@@ -156,6 +132,12 @@ namespace Lib
                     action();
                 }
             }
+        }
+
+        [MustUseReturnValue]
+        public static Routine<T>.Optional DisposeOn<T>(this Routine<T> r, IScope scope)
+        {
+            return r.ToOptional().DisposeOn(scope);
         }
 
         public static T1 DisposeOn<T1>(this T1 dispose, IScope scope) where T1 : IDisposable
