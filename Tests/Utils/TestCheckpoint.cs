@@ -79,7 +79,7 @@ namespace Lib.UnitTests
                 {
                     return hashSet.Select(e => e.ToString()).Aggregate((a, b) => $"{a}, {b}");
                 }
-                catch (Exception e)
+                catch
                 {
                     return string.Empty;
                 }

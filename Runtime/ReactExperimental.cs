@@ -62,7 +62,7 @@ namespace Lib
                         var r = aw.GetResult();
                         p.Next(r);
                     }
-                    catch (Exception _)
+                    catch 
                     {
 //                        Debug.Log(e); // todo testcase
                     }

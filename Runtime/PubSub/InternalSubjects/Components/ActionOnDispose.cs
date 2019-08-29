@@ -5,9 +5,6 @@
 // ----------------------------------------------------------------------------
 
 using System;
-using Game.Proto;
-using JetBrains.Annotations;
-using Lib.DataFlow;
 
 namespace Lib.Utility
 {

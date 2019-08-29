@@ -56,7 +56,7 @@ namespace MyNamespace
             UnityEditor.SceneView.beforeSceneGui += OnSceneViewOnBeforeSceneGui;
             UnityEditor.SceneView.duringSceneGui += OnSceneViewOnDuringSceneGui;
 
-            scope.OnDispose(() =>
+            scope.Subscribe(() =>
             {
                 UnityEditor.SceneView.beforeSceneGui -= OnSceneViewOnBeforeSceneGui;
                 UnityEditor.SceneView.duringSceneGui -= OnSceneViewOnDuringSceneGui;
