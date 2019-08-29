@@ -32,7 +32,7 @@ namespace MyNamespace
 //            SetFlag(false);
         }
 
-        [ShowInInspector] SortableEdList<Scope> _all;
+        [ShowInInspector] SortableEdList<_Scope> _all;
 
         protected override void OnDestroy()
         {
@@ -62,8 +62,8 @@ namespace MyNamespace
             }, scope);
 
 
-            _all = new SortableEdList<Scope>((s0, s1) => -s0.Count + s1.Count);
-            _Scope.OnNew += OnNew;
+            _all = new SortableEdList<_Scope>((s0, s1) => -s0.Count + s1.Count);
+            Lib.Async.Debugger._Scope.OnNew += OnNew;
 
             await EnsureDebugFlag();
 
@@ -100,9 +100,9 @@ namespace MyNamespace
         }
 
 
-        void OnNew(_Scope t)
+        void OnNew(Lib.Async.Debugger._Scope t)
         {
-            var sc = new Scope();
+            var sc = new _Scope();
             _all.All.Add(sc);
 
             t.CtorStackTrace += msg => sc.Created = msg;
@@ -122,7 +122,7 @@ namespace MyNamespace
 
 
         [InlineProperty, HideReferenceObjectPicker]
-        public class Scope
+        public class _Scope
         {
             [UsedImplicitly, HideLabel] public StackTraceHolder Created;
             public int Count => Subscribers.Count;

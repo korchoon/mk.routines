@@ -13,7 +13,7 @@ namespace Lib
 {
     public static class React
     {
-        [MustUseReturnValue]
+        [JetBrains.Annotations.MustUseReturnValue]
         public static (IPub pub, ISub sub) PubSub(this IScope scope)
         {
             Asr.IsFalse(scope.Disposing);
