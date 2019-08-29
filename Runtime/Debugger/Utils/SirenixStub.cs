@@ -5,12 +5,12 @@
 // ----------------------------------------------------------------------------
 
 using System;
-using UnityEditor;
 
 #if !ODIN_INSPECTOR
 
 
 #if UNITY_EDITOR
+using UnityEditor;
 namespace Sirenix.OdinInspector.Editor
 {
     public class OdinEditorWindow : EditorWindow
@@ -18,6 +18,13 @@ namespace Sirenix.OdinInspector.Editor
     }
 }
 #endif
+
+namespace Sirenix.Serialization
+{
+    public class OdinSerializeAttribute : Attribute
+    {
+    }
+}
 
 namespace Sirenix.OdinInspector
 {

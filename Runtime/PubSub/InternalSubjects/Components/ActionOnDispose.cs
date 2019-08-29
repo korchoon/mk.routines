@@ -5,13 +5,10 @@
 // ----------------------------------------------------------------------------
 
 using System;
-using Game.Proto;
-using JetBrains.Annotations;
-using Reactors.DataFlow;
 
 namespace Reactors.Utility
 {
-    internal class ActionOnDispose : IDisposable
+    class ActionOnDispose : IDisposable
     {
         Action _onDispose;
 

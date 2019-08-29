@@ -19,7 +19,7 @@ using Debug = UnityEngine.Debug;
 namespace Reactors.Async
 {
     [AsyncMethodBuilder(typeof(RoutineBuilder<>))]
-    public sealed class Routine<T> : IDisposable
+    public sealed class Routine<T>
     {
         internal IPub Complete;
 
@@ -31,28 +31,59 @@ namespace Reactors.Async
 
         internal void SetResult(T res) => _result = res;
 
-        public IScope GetScope(IScope scope)
-        {
-            scope.Subscribe(Dispose);
-            return Scope;
-        }
-
         internal Routine()
         {
             ISub onComplete;
             _Dispose = Sch.Scope.Scope(out Scope);
             Scope.Scope(out _awaitersScope);
             (Complete, onComplete) = Scope.PubSub();
-            onComplete.OnNext(Dispose, Scope);
+            onComplete.OnNext(_Dispose.Dispose, Scope);
         }
 
         [UsedImplicitly]
         public GenericAwaiter<T> GetAwaiter()
         {
-            var aw = new GenericAwaiter(_awaitersScope, Dispose);
+            var aw = new GenericAwaiter(_awaitersScope, _Dispose.Dispose);
             return new GenericAwaiter<T>(aw, () => _result.GetOrFail());
         }
 
-        public void Dispose() => _Dispose.Dispose();
+        public Optional ToOptional() => new Optional(GetAwaiterOptional(), _Dispose, Scope);
+
+        GenericAwaiter<Option<T>> GetAwaiterOptional()
+        {
+            // todo assert awaiterScope is empty
+            // todo assert awaiterScope will not be used (no subscribes)
+            var aw = new GenericAwaiter(_awaitersScope, _Dispose.Dispose);
+            return new GenericAwaiter<Option<T>>(aw, () => _result);
+        }
+
+
+        public class Optional : IDisposable
+        {
+            GenericAwaiter<Option<T>> _aw;
+            IDisposable _disposable;
+            IScope _scope;
+
+            public Optional(GenericAwaiter<Option<T>> aw, IDisposable disposable, IScope scope)
+            {
+                _aw = aw;
+                _disposable = disposable;
+                _scope = scope;
+            }
+
+            // todo: should I copy or reuse?
+            public GenericAwaiter<Option<T>> GetAwaiter() => _aw;
+
+            public IScope GetScope(IScope scope)
+            {
+                scope.Subscribe(Dispose);
+                return _scope;
+            }
+
+            public void Dispose()
+            {
+                _disposable.Dispose();
+            }
+        }
     }
 }

@@ -126,12 +126,6 @@ namespace Utility.Asserts
                 message = "Assertion has failed\n";
             if (userMessage != null)
                 message = userMessage + '\n' + message;
-//            UnityEngine.Debug.unityLogger.Log(LogType.Assert, message);
-
-            if (Debugger.IsAttached)
-                throw new AssertException(message);
-            if (Assert.raiseExceptions)
-                throw new AssertException(message);
 
             throw new AssertException(message);
         }
