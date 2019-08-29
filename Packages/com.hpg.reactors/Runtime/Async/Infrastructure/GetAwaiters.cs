@@ -43,7 +43,7 @@ namespace Reactors.Async
 
             var tt = factory.Invoke(cts.Token);
             var routine = _Inner(tt);
-            scope.Subscribe(() => routine.Dispose());
+            scope.Subscribe(() => routine.ToOptional().Dispose());
             routine.Scope.Subscribe(cts.Dispose);
             return routine;
 

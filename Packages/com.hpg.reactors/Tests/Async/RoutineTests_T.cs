@@ -9,6 +9,10 @@ using Reactors;
 using Reactors.Async;
 using Reactors.DataFlow;
 using NUnit.Framework;
+using Utility.Asserts;
+
+#pragma warning disable 4014
+#pragma warning disable 1998
 
 namespace AsyncTests.Async
 {
@@ -43,6 +47,34 @@ namespace AsyncTests.Async
                 return 42;
             }
         }
+        
+        
+        [Test]
+        public void MultipleDispose()
+        {
+            var visited = false;
+            Sample();
+            Assert.IsTrue(visited);
+
+            var dispose1 = React.Scope(out var scope1);
+            var r = Outer(scope1);
+            dispose1.Dispose();
+            Asr.IsTrue(r.GetAwaiter().IsCompleted);
+
+            async Routine Outer(IScope scope)
+            {
+                var res = await Sample().DisposeOn(scope);
+                Asr.IsFalse(res.HasValue);
+            }
+
+            async Routine<int> Sample()
+            {
+                visited = true;
+                await _Never.Instance;
+                return 42;
+            }
+        }
+
 
         [Test]
         public void SubAwaiter_Flow_Completed_AfterNext()
@@ -67,7 +99,7 @@ namespace AsyncTests.Async
         [Test]
         public void Dispose_DoesNotInvokeContinuation_SubAwaiter()
         {
-            var r = Sample();
+            var r = Sample().ToOptional();
             r.Dispose();
 
             async Routine<int> Sample()
@@ -84,7 +116,7 @@ namespace AsyncTests.Async
             using (React.Scope(out var scope))
             {
                 var (pub, sub) = scope.PubSub();
-                var r = Sample();
+                var r = Sample().ToOptional();
                 r.GetAwaiter();
                 r.Dispose();
                 pub.Next();
@@ -103,7 +135,7 @@ namespace AsyncTests.Async
         public void OuterRoutine_Dispose_Breaks_Inner()
         {
             Routine<int> innerClosure = null;
-            var outer = Outer();
+            var outer = Outer().ToOptional();
             var innerAwaiter = innerClosure.GetAwaiter();
             outer.Dispose();
             Assert.IsTrue(innerAwaiter.IsCompleted);
@@ -128,15 +160,15 @@ namespace AsyncTests.Async
             using (React.Scope(out var scope))
             {
                 Routine<int> closure = null;
-                var r = Outer();
-                var aw = closure.GetAwaiter();
+                var r = Outer().ToOptional();
+                var aw = closure.ToOptional().GetAwaiter();
                 r.Dispose();
                 Assert.IsFalse(aw.IsCompleted);
 
                 async Routine<int> Outer()
                 {
                     closure = Inner();
-                    await closure.GetScope(scope);
+                    await closure.ToOptional().GetScope(scope);
                     return 42;
                 }
 
@@ -154,14 +186,14 @@ namespace AsyncTests.Async
             using (React.Scope(out var scope))
             {
                 var (pub, sub) = scope.PubSub();
-                var r = Sample();
+                var r = Sample().ToOptional();
                 pub.Next();
                 var aw = r.GetAwaiter();
                 int i = 0;
                 aw.OnCompleted(() => ++i);
                 Assert.AreEqual(1, i);
                 Assert.IsTrue(aw.IsCompleted);
-                Assert.AreEqual(42, aw.GetResult());
+                Assert.AreEqual(42, aw.GetResult().GetOrFail());
 
 
                 r.Dispose();
@@ -179,7 +211,7 @@ namespace AsyncTests.Async
         [Test]
         public void DisposedRoutine_Awaiter_IsCompleted()
         {
-            var r = Sample();
+            var r = Sample().ToOptional();
             r.Dispose();
             var aw = r.GetAwaiter();
             Assert.IsTrue(aw.IsCompleted);

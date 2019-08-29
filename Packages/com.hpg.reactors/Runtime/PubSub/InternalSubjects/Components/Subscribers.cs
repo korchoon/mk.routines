@@ -6,11 +6,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using Game.Proto;
 using Reactors.Async;
-using Reactors.Attributes;
-using Reactors.Utility;
 using Utility.Asserts;
 
 namespace Reactors.DataFlow
