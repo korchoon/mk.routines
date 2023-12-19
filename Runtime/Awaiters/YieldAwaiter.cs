@@ -10,7 +10,7 @@ namespace Mk.Routines {
         bool _updatedOnce;
         Action _continuation;
 
-        public void Break () {
+        public void Dispose () {
             if (!IsCompleted) {
                 IsCompleted = true;
                 Pool.Push (this);
@@ -28,14 +28,14 @@ namespace Mk.Routines {
             if (Utils.TrySetNull (ref _continuation, out var c)) c.Invoke ();
         }
 
-        public void Update () {
+        public void Tick () {
             if (!_updatedOnce) {
                 _updatedOnce = true;
                 return;
             }
 
             if (IsCompleted) return;
-            this.BreakAndUpdateParent ();
+            this.DisposeAndUpdateParent ();
         }
 
         #region async

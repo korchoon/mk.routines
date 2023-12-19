@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using Mk.Debugs;
 
 namespace Mk.Routines {
 #line hidden
-    public class TryAwaiter2<T> : IRoutine<T>, ICriticalNotifyCompletion where T : IOptional {
+    public class FuncAwaiter<T> : IRoutine<T>, ICriticalNotifyCompletion where T : IOptional {
         public Func<T> TryGet;
         public Action OnDispose;
         Action _continuation;
         T _cached;
 
-        public void Break () {
+        public void Dispose () {
             if (IsCompleted) return;
             IsCompleted = true;
             OnDispose?.Invoke ();
@@ -20,12 +21,12 @@ namespace Mk.Routines {
             if (Utils.TrySetNull (ref _continuation, out var c)) c.Invoke ();
         }
 
-        public void Update () {
+        public void Tick () {
             if (IsCompleted) return;
 
             _cached = TryGet.Invoke ();
             if (_cached.HasValue) {
-                this.BreakAndUpdateParent ();
+                this.DisposeAndUpdateParent ();
             }
         }
 
@@ -34,7 +35,7 @@ namespace Mk.Routines {
         CalledOnceGuard _guard;
 
         [UsedImplicitly]
-        public TryAwaiter2<T> GetAwaiter () {
+        public FuncAwaiter<T> GetAwaiter () {
             _guard.Assert ();
             return this;
         }

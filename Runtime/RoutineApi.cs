@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Mk.Debugs;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -28,8 +29,8 @@ namespace Mk.Routines {
             return Routine.When (() => Time >= endTime);
         }
 
-        public static void BreakAndUpdateParent<T> (this T r) where T : IRoutine {
-            r.Break ();
+        public static void DisposeAndUpdateParent<T> (this T r) where T : IRoutine {
+            r.Dispose ();
             r.UpdateParent ();
         }
 
@@ -69,9 +70,9 @@ namespace Mk.Routines {
 
         public static async Routine ToRoutine (this IRoutine routine) {
             var rollback = await Routine.GetRollback ();
-            rollback.Defer (routine.Break);
+            rollback.Defer (routine.Dispose);
             await Routine.When (() => {
-                routine.Update ();
+                routine.Tick ();
                 return routine.IsCompleted;
             });
         }
@@ -80,7 +81,7 @@ namespace Mk.Routines {
         public static Routine<Option<T>> BreakOn<T> (this IRoutine<T> routine, Func<bool> breakOn) => routine.While (() => !breakOn ());
 
         public static Routine<Option<T>> BreakOn<T> (this IRoutine<T> routine, IRoutine breakOn) => routine.While (() => {
-            breakOn.Update ();
+            breakOn.Tick ();
             return !breakOn.IsCompleted;
         });
 
@@ -99,9 +100,9 @@ namespace Mk.Routines {
 
             async Routine<Option<T>> inner () {
                 var rollback = await Routine.GetRollback ();
-                rollback.Defer (routine.Break);
+                rollback.Defer (routine.Dispose);
                 while (true) {
-                    routine.Update ();
+                    routine.Tick ();
                     if (routine.IsCompleted) {
                         return routine.GetResult ();
                     }

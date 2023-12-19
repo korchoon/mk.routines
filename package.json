@@ -1,0 +1,7 @@
+{
+  "name": "mk.routines",
+  "displayName": "Async Routines",
+  "version": "0.9.0",
+  "unity": "2021.1",
+  "description": "Custom async type with explicit scheduling, without threading"
+}

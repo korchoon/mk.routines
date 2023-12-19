@@ -1,4 +1,5 @@
 ﻿using System;
+using Mk.Debugs;
 using System.Runtime.CompilerServices;
 
 namespace Mk.Routines {
@@ -13,7 +14,7 @@ namespace Mk.Routines {
 
         public ActionAwaiter () { }
 
-        void IRoutine.Break () {
+        void IDisposable.Dispose () {
             IsCompleted = true;
             BeforeDispose?.Invoke ();
             _rollback?.Dispose ();
@@ -25,13 +26,13 @@ namespace Mk.Routines {
             }
         }
 
-        void IRoutine.Update () {
+        void IRoutine.Tick () {
             if (IsCompleted) {
                 return;
             }
 
             if (DoWhile != null && !DoWhile.Invoke ()) {
-                this.BreakAndUpdateParent ();
+                this.DisposeAndUpdateParent ();
                 return;
             }
 
@@ -48,11 +49,9 @@ namespace Mk.Routines {
 
         #region async
 
-        CalledOnceGuard _guard;
         Action _continuation;
 
         public ActionAwaiter GetAwaiter () {
-            _guard.Assert ();
             return this;
         }
 

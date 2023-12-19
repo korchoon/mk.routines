@@ -6,34 +6,39 @@ using Mk.Debugs;
 
 namespace Mk.Routines {
 #line hidden
-    public class AnyAwaiter : IRoutine<IReadOnlyList<bool>>, ICriticalNotifyCompletion {
+    public class FirstAwaiter : IRoutine<int>, ICriticalNotifyCompletion {
         public IReadOnlyList<IRoutine> Args;
-        bool[] _result;
         Action _continuation;
+        bool _has;
+        int _index;
 
-        public void Break () {
+        public void Dispose () {
             if (IsCompleted) return;
             IsCompleted = true;
-            foreach (var u in Args) u.Break ();
+            foreach (var u in Args) u.Dispose ();
         }
 
         public void UpdateParent () {
             if (Utils.TrySetNull (ref _continuation, out var c)) c.Invoke ();
         }
 
-        public void Update () {
+        public void Tick () {
             if (IsCompleted) return;
 
             var any = false;
             for (var index = 0; index < Args.Count; index++) {
                 var u = Args[index];
-                u.Update ();
-                _result[index] = u.IsCompleted;
+                u.Tick ();
+                if (!_has && u.IsCompleted) {
+                    _has = true;
+                    _index = index;
+                }
+
                 any |= u.IsCompleted;
             }
 
             if (any) {
-                this.BreakAndUpdateParent ();
+                this.DisposeAndUpdateParent ();
             }
         }
 
@@ -42,15 +47,15 @@ namespace Mk.Routines {
         CalledOnceGuard _guard;
 
         [UsedImplicitly]
-        public AnyAwaiter GetAwaiter () {
-            _result = new bool[this.Args.Count];
+        public FirstAwaiter GetAwaiter () {
             _guard.Assert ();
             return this;
         }
 
         [UsedImplicitly]
-        public IReadOnlyList<bool> GetResult () {
-            return _result;
+        public int GetResult () {
+            Asr.IsTrue (_has);
+            return _index;
         }
 
         [UsedImplicitly]
@@ -72,33 +77,40 @@ namespace Mk.Routines {
 
         #endregion
     }
-    public class AnyAwaiter<T> : IRoutine<(bool,IRoutine<T>)[]>, ICriticalNotifyCompletion {
-        public (bool, IRoutine<T>)[] Args;
-        Action _continuation;
 
-        public void Break () {
+    public class FirstAwaiter<T> : IRoutine<T>, ICriticalNotifyCompletion {
+        public IReadOnlyList<IRoutine<T>> Args;
+        Action _continuation;
+        T _result;
+        bool _has;
+
+        public void Dispose () {
             if (IsCompleted) return;
             IsCompleted = true;
-            foreach (var u in Args) u.Item2.Break ();
+            foreach (var u in Args) u.Dispose ();
         }
 
         public void UpdateParent () {
             if (Utils.TrySetNull (ref _continuation, out var c)) c.Invoke ();
         }
 
-        public void Update () {
+        public void Tick () {
             if (IsCompleted) return;
 
             var any = false;
-            for (var index = 0; index < Args.Length; index++) {
-                ref var result = ref Args[index];
-                result.Item2.Update ();
-                result.Item1 = result.Item2.IsCompleted;
-                any |= result.Item2.IsCompleted;
+            for (var index = 0; index < Args.Count; index++) {
+                var u = Args[index];
+                u.Tick ();
+                if (!_has && u.IsCompleted) {
+                    _has = true;
+                    _result = u.GetResult ();
+                }
+
+                any |= u.IsCompleted;
             }
 
             if (any) {
-                this.BreakAndUpdateParent ();
+                this.DisposeAndUpdateParent ();
             }
         }
 
@@ -107,14 +119,15 @@ namespace Mk.Routines {
         CalledOnceGuard _guard;
 
         [UsedImplicitly]
-        public AnyAwaiter<T> GetAwaiter () {
+        public FirstAwaiter<T> GetAwaiter () {
             _guard.Assert ();
             return this;
         }
 
         [UsedImplicitly]
-        public (bool,IRoutine<T>)[] GetResult () {
-            return Args;
+        public T GetResult () {
+            Asr.IsTrue (_has);
+            return _result;
         }
 
         [UsedImplicitly]

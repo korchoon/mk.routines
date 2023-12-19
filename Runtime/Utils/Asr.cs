@@ -7,7 +7,7 @@ using System;
 using System.Diagnostics;
 
 namespace Mk.Debugs {
-    static class Asr2 {
+    static class Asr {
 #line hidden
         [Conditional(FLAGS.DEBUG)]
         public static void IsNotNull<T>(T obj, string msg = null) where T : class {

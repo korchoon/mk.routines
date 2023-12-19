@@ -1,29 +1,40 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Mk.Debugs;
 
 namespace Mk.Routines {
 #line hidden
-    public class TryAwaiter : IRoutine, ICriticalNotifyCompletion {
-        public Func<bool> TryGet;
-        public Action OnDispose;
+    public class AnyAwaiter : IRoutine<IReadOnlyList<bool>>, ICriticalNotifyCompletion {
+        public IReadOnlyList<IRoutine> Args;
+        bool[] _result;
         Action _continuation;
 
-        public void Break () {
+        public void Dispose () {
             if (IsCompleted) return;
             IsCompleted = true;
-            OnDispose?.Invoke ();
+            foreach (var u in Args) u.Dispose ();
         }
 
-        void IRoutine.UpdateParent () {
+        public void UpdateParent () {
             if (Utils.TrySetNull (ref _continuation, out var c)) c.Invoke ();
         }
 
-        public void Update () {
+        public void Tick () {
             if (IsCompleted) return;
-            if (!TryGet.Invoke ()) return;
-            this.BreakAndUpdateParent ();
+
+            var any = false;
+            for (var index = 0; index < Args.Count; index++) {
+                var u = Args[index];
+                u.Tick ();
+                _result[index] = u.IsCompleted;
+                any |= u.IsCompleted;
+            }
+
+            if (any) {
+                this.DisposeAndUpdateParent ();
+            }
         }
 
         #region async
@@ -31,16 +42,16 @@ namespace Mk.Routines {
         CalledOnceGuard _guard;
 
         [UsedImplicitly]
-        public TryAwaiter GetAwaiter () {
+        public AnyAwaiter GetAwaiter () {
+            _result = new bool[this.Args.Count];
             _guard.Assert ();
             return this;
         }
 
         [UsedImplicitly]
-        public bool IsCompleted { get; private set; }
-
-        [UsedImplicitly]
-        public void GetResult () { }
+        public IReadOnlyList<bool> GetResult () {
+            return _result;
+        }
 
         [UsedImplicitly]
         public void OnCompleted (Action continuation) {
@@ -55,32 +66,39 @@ namespace Mk.Routines {
 
         [UsedImplicitly]
         public void UnsafeOnCompleted (Action continuation) => OnCompleted (continuation);
+
+        [UsedImplicitly]
+        public bool IsCompleted { get; private set; }
 
         #endregion
     }
-
-    public class TryAwaiter<T> : IRoutine<T>, ICriticalNotifyCompletion {
-        public Func<Option<T>> TryGet;
-        public Action OnDispose;
+    public class AnyAwaiter<T> : IRoutine<(bool,IRoutine<T>)[]>, ICriticalNotifyCompletion {
+        public (bool, IRoutine<T>)[] Args;
         Action _continuation;
-        Option<T> _cached;
 
-        public void Break () {
+        public void Dispose () {
             if (IsCompleted) return;
             IsCompleted = true;
-            OnDispose?.Invoke ();
+            foreach (var u in Args) u.Item2.Dispose ();
         }
 
-        void IRoutine.UpdateParent () {
+        public void UpdateParent () {
             if (Utils.TrySetNull (ref _continuation, out var c)) c.Invoke ();
         }
 
-        public void Update () {
+        public void Tick () {
             if (IsCompleted) return;
 
-            _cached = TryGet.Invoke ();
-            if (_cached.HasValue) {
-                this.BreakAndUpdateParent ();
+            var any = false;
+            for (var index = 0; index < Args.Length; index++) {
+                ref var result = ref Args[index];
+                result.Item2.Tick ();
+                result.Item1 = result.Item2.IsCompleted;
+                any |= result.Item2.IsCompleted;
+            }
+
+            if (any) {
+                this.DisposeAndUpdateParent ();
             }
         }
 
@@ -89,16 +107,15 @@ namespace Mk.Routines {
         CalledOnceGuard _guard;
 
         [UsedImplicitly]
-        public TryAwaiter<T> GetAwaiter () {
+        public AnyAwaiter<T> GetAwaiter () {
             _guard.Assert ();
             return this;
         }
 
         [UsedImplicitly]
-        public bool IsCompleted { get; private set; }
-
-        [UsedImplicitly]
-        public T GetResult () => _cached.GetOrFail ();
+        public (bool,IRoutine<T>)[] GetResult () {
+            return Args;
+        }
 
         [UsedImplicitly]
         public void OnCompleted (Action continuation) {
@@ -113,6 +130,9 @@ namespace Mk.Routines {
 
         [UsedImplicitly]
         public void UnsafeOnCompleted (Action continuation) => OnCompleted (continuation);
+
+        [UsedImplicitly]
+        public bool IsCompleted { get; private set; }
 
         #endregion
     }

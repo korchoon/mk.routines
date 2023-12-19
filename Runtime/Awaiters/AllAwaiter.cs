@@ -10,38 +10,35 @@ namespace Mk.Routines {
         public IReadOnlyList<IRoutine> Args;
         Action _continuation;
 
-        public void Break () {
+        public void Dispose () {
             if (IsCompleted) return;
             IsCompleted = true;
-            foreach (var u in Args) u.Break ();
+            foreach (var u in Args) u.Dispose ();
         }
 
         public void UpdateParent () {
             if (Utils.TrySetNull (ref _continuation, out var c)) c.Invoke ();
         }
 
-        public void Update () {
+        public void Tick () {
             if (IsCompleted) return;
 
             var all = true;
             for (var index = 0; index < Args.Count; index++) {
                 var u = Args[index];
-                u.Update ();
+                u.Tick ();
                 all &= u.IsCompleted;
             }
 
             if (all) {
-                this.BreakAndUpdateParent ();
+                this.DisposeAndUpdateParent ();
             }
         }
 
         #region async
 
-        CalledOnceGuard _guard;
-
         [UsedImplicitly]
         public AllAwaiter GetAwaiter () {
-            _guard.Assert ();
             return this;
         }
 

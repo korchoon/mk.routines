@@ -20,13 +20,13 @@ namespace Mk.Routines {
         
         public void Attach (IRoutine r) {
             Routines.Add (r);
-            r.Update (); // todo ?
+            r.Tick (); // todo ?
         }
 
         public void AttachScoped (IRoutine r, IRollback rollback) {
             Attach (r);
             rollback.Defer (() => {
-                r.Break ();
+                r.Dispose ();
                 Detach (r);
             });
         }
@@ -39,8 +39,8 @@ namespace Mk.Routines {
     public class SelfParallelAwaiter : IRoutine, ICriticalNotifyCompletion {
         internal AttachedRoutines Value;
         public void UpdateParent () { }
-        public void Update () { }
-        public void Break () { }
+        public void Tick () { }
+        public void Dispose () { }
 
         #region async
 
@@ -67,18 +67,18 @@ namespace Mk.Routines {
         #endregion
     }
 
-    public class SelfDisposerAwaiter : IRoutine, ICriticalNotifyCompletion {
+    public class SelfRollbackAwaiter : IRoutine, ICriticalNotifyCompletion {
         internal Rollback Value;
         public void UpdateParent () { }
-        public void Update () { }
-        public void Break () { }
+        public void Tick () { }
+        public void Dispose () { }
 
         #region async
 
         CalledOnceGuard _guard;
 
         [UsedImplicitly]
-        public SelfDisposerAwaiter GetAwaiter () {
+        public SelfRollbackAwaiter GetAwaiter () {
             _guard.Assert ();
             return this;
         }

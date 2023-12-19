@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Mk.Debugs;
 
 namespace Mk.Routines {
 #line hidden
@@ -15,10 +16,10 @@ namespace Mk.Routines {
         bool _started;
         Rollback _rollback;
 
-        void IRoutine.Break () {
+        void IDisposable.Dispose () {
             IsCompleted = true;
             BeforeDispose?.Invoke ();
-            Main.Break ();
+            Main.Dispose ();
             _rollback?.Dispose ();
         }
 
@@ -29,32 +30,31 @@ namespace Mk.Routines {
             }
         }
 
-        void IRoutine.Update () {
+        void IRoutine.Tick () {
             if (IsCompleted) {
                 return;
             }
 
             if (DoWhile != null && !DoWhile.Invoke ()) {
                 OnBreak?.Invoke ();
-                this.BreakAndUpdateParent ();
+                this.DisposeAndUpdateParent ();
                 return;
             }
 
             if (!_started) {
                 _started = true;
                 if (OnStart != null) {
-                    Dbg.LineGame ();
                     _rollback = new Rollback ();
-                    _rollback.Defer (Main.Break);
+                    _rollback.Defer (Main.Dispose);
                     OnStart.Invoke (_rollback);
                 }
             }
 
 
             BeforeUpdate?.Invoke ();
-            Main.Update ();
+            Main.Tick ();
             if (Main.IsCompleted) {
-                this.BreakAndUpdateParent ();
+                this.DisposeAndUpdateParent ();
                 return;
             }
 
@@ -100,10 +100,10 @@ namespace Mk.Routines {
 
         Action _continuation;
 
-        public void Break () {
+        public void Dispose () {
             IsCompleted = true;
             BeforeDisposeAction?.Invoke ();
-            MainRoutine.Break ();
+            MainRoutine.Dispose ();
         }
 
         public void UpdateParent () {
@@ -111,13 +111,13 @@ namespace Mk.Routines {
             if (Utils.TrySetNull (ref _continuation, out var c)) c.Invoke ();
         }
 
-        public void Update () {
+        public void Tick () {
             if (IsCompleted) return;
 
             BeforeUpdateAction?.Invoke ();
-            MainRoutine.Update ();
+            MainRoutine.Tick ();
             if (MainRoutine.IsCompleted) {
-                this.BreakAndUpdateParent ();
+                this.DisposeAndUpdateParent ();
                 return;
             }
 
@@ -140,7 +140,6 @@ namespace Mk.Routines {
 
             Asr.IsTrue (_continuation == null);
             _continuation = continuation;
-
             // MainRoutine.OnCompleted(continuation);
         }
 

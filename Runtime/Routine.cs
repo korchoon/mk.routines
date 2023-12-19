@@ -12,61 +12,39 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
-using Leopotam.EcsLite;
 using Mk.Debugs;
-using Mk.Routines;
-using UnityEngine;
-
-[Serializable]
-struct __RoutineInfo {
-    public IRoutine Value;
-}
-
 
 namespace Mk.Routines {
 #line hidden
 
+    [PublicAPI]
 #if MK_TRACE
     [Serializable]
 #endif
     [AsyncMethodBuilder (typeof (RoutineBuilder))]
     public sealed class Routine : IRoutine, ICriticalNotifyCompletion {
-        [HideInInspector] internal Action Start;
+        internal Action Start;
         public string __Await;
-        [SerializeReference] internal Option<AttachedRoutines> AttachedRoutines;
+        internal Option<AttachedRoutines> AttachedRoutines;
         internal Rollback TaskRollback;
-        [SerializeReference] internal IRoutine CurrentAwaiter;
+        internal IRoutine CurrentAwaiter;
 
         Action _continuation;
 
-#if MK_TRACE
-        EcsPackedEntityWithWorld _entity;
-#endif
+        internal Routine () { }
 
-        internal Routine () {
-#if MK_TRACE
-            var newEntity = EditorLocator.World.NewEntity ();
-            _entity = EditorLocator.World.PackEntityWithWorld (newEntity);
-            EditorLocator.World.GetPool<__RoutineInfo> ().Add (newEntity).Value = this;
-#endif
-        }
-
-        public void Break () {
+        public void Dispose () {
             if (IsCompleted) return;
-#if MK_TRACE
-            _entity.Unpack (out var ecsWorld, out var entity);
-            ecsWorld.DelEntity (entity);
-#endif
 
             Start = null;
             IsCompleted = true;
             if (AttachedRoutines.TryGet (out var attachedRoutines)) {
                 AttachedRoutines = default;
                 for (var i = attachedRoutines.Routines.Count - 1; i >= 0; i--)
-                    attachedRoutines.Routines[i].Break ();
+                    attachedRoutines.Routines[i].Dispose ();
             }
 
-            if (Utils.TrySetNull (ref CurrentAwaiter, out var buf)) buf.Break ();
+            if (Utils.TrySetNull (ref CurrentAwaiter, out var buf)) buf.Dispose ();
             TaskRollback?.Dispose ();
 #if MK_TRACE
             __Await = $"[Interrupted at] {__Await}";
@@ -81,7 +59,7 @@ namespace Mk.Routines {
             if (Utils.TrySetNull (ref _continuation, out var c)) c.Invoke ();
         }
 
-        public void Update () {
+        public void Tick () {
             if (IsCompleted) return;
 
             if (Utils.TrySetNull (ref Start, out var start)) {
@@ -92,10 +70,10 @@ namespace Mk.Routines {
             if (AttachedRoutines.TryGet (out var attachedRoutines))
                 for (var i = 0; i < attachedRoutines.Routines.Count; i++) {
                     if (IsCompleted) return;
-                    attachedRoutines.Routines[i].Update ();
+                    attachedRoutines.Routines[i].Tick ();
                 }
 
-            CurrentAwaiter?.Update ();
+            CurrentAwaiter?.Tick ();
         }
 
         #region async
@@ -132,7 +110,7 @@ namespace Mk.Routines {
 
         #region static api
 
-        static InfLoopSafety _safety = new InfLoopSafety (999);
+        static InfLoopSafety _safety = new InfLoopSafety (10000);
 
         public static async Routine While (Func<bool> enterIf, Action<IRollback> start = null, Action update = null, Func<IRoutine> routine = default) {
             _safety.Check ();
@@ -145,12 +123,12 @@ namespace Mk.Routines {
 
             if (routine != null) {
                 await routine.Invoke ().Configure (doWhile: enterIf, onStart: start, afterUpdate: update);
-                await Routine.When (() => !enterIf ());
+                await When (() => !enterIf ());
             }
             else {
-                var rollback = await Routine.GetRollback ();
+                var rollback = await GetRollback ();
                 start?.Invoke (rollback);
-                await Routine.When (() => !enterIf ()).Configure (afterUpdate: update);
+                await When (() => !enterIf ()).Configure (afterUpdate: update);
             }
         }
 
@@ -162,7 +140,7 @@ namespace Mk.Routines {
                     }
 
                     _emptyInstance = empty ();
-                    _emptyInstance.Update ();
+                    _emptyInstance.Tick ();
                     Asr.IsTrue (_emptyInstance.IsCompleted);
                     return _emptyInstance;
 #pragma warning disable 1998
@@ -204,75 +182,19 @@ namespace Mk.Routines {
         public static TryAwaiter<T> WhenGet<T> (Func<Option<T>> p) => new TryAwaiter<T> () { TryGet = p };
 
         [MustUseReturnValue]
-        public static TryAwaiter2<T> Branch<T> (Func<T> p) where T : IOptional => new TryAwaiter2<T> () { TryGet = p };
+        public static FuncAwaiter<T> Branch<T> (Func<T> p) where T : IOptional => new FuncAwaiter<T> () { TryGet = p };
 
         [MustUseReturnValue]
         public static AnyAwaiter WhenAny (params IRoutine[] args) => new AnyAwaiter () { Args = args };
 
         [MustUseReturnValue]
-        public static AnyAwaiter<T> WhenAny_T<T> (params IRoutine<T>[] args) => new AnyAwaiter<T> () { Args = args.Select (a=>(false,a)).ToArray () };
+        public static AnyAwaiter<T> WhenAny_T<T> (params IRoutine<T>[] args) => new AnyAwaiter<T> () { Args = args.Select (a => (false, a)).ToArray () };
 
         [MustUseReturnValue]
         public static AnyAwaiter WhenAny (IReadOnlyList<IRoutine> args) => new AnyAwaiter () { Args = args };
 
         [MustUseReturnValue]
         public static FirstAwaiter<T> WhenFirst<T> (IReadOnlyList<IRoutine<T>> args) => new FirstAwaiter<T> () { Args = args };
-#if false
-
-        public static async Routine<Either<T1, T2>> Branch<T1, T2> (IRoutine<T1> r1, IRoutine<T2> r2) {
-            try {
-                while (true) {
-                    if (r1.IsCompleted || r2.IsCompleted) {
-                        return Either.Of (TryGet (r1), TryGet (r2));
-                    }
-
-                    r1.Update ();
-                    r2.Update ();
-                    await Yield;
-                }
-            }
-            finally {
-                r1.Break ();
-                r2.Break ();
-            }
-        }
-
-        public static async Routine<Either<T1, bool>> Branch<T1> (IRoutine<T1> r1, IRoutine r2) {
-            try {
-                while (true) {
-                    if (r1.IsCompleted || r2.IsCompleted) {
-                        return Either.Of (TryGet (r1), Option.Some (r2.IsCompleted));
-                    }
-
-                    r1.Update ();
-                    r2.Update ();
-                    await Yield;
-                }
-            }
-            finally {
-                r1.Break ();
-                r2.Break ();
-            }
-        }
-#endif
-
-        public static async Routine<(bool, bool)> Branch (IRoutine r1, IRoutine r2) {
-            try {
-                while (true) {
-                    if (r1.IsCompleted || r2.IsCompleted) {
-                        return ((r1.IsCompleted), (r2.IsCompleted));
-                    }
-
-                    r1.Update ();
-                    r2.Update ();
-                    await Yield;
-                }
-            }
-            finally {
-                r1.Break ();
-                r2.Break ();
-            }
-        }
 
         static Option<T> TryGet<T> (IRoutine<T> r) {
             if (!r.IsCompleted) {
@@ -297,13 +219,10 @@ namespace Mk.Routines {
         public static AllAwaiter WhenAll (IReadOnlyList<IRoutine> args) => new AllAwaiter () { Args = args };
 
         [MustUseReturnValue]
-        public static SelfDisposerAwaiter GetRollback () => new SelfDisposerAwaiter ();
+        public static SelfRollbackAwaiter GetRollback () => new SelfRollbackAwaiter ();
 
         [MustUseReturnValue]
         public static SelfParallelAwaiter GetParallel () => new SelfParallelAwaiter ();
-
-        [MustUseReturnValue]
-        public static SelfDisposerAwaiter GetBreak () => new SelfDisposerAwaiter ();
 
         public static YieldAwaiter Yield => YieldAwaiter.Pool.Pop ();
 
@@ -316,7 +235,7 @@ namespace Mk.Routines {
                 }
 
                 _emptyInstance = empty ();
-                _emptyInstance.Update ();
+                _emptyInstance.Tick ();
                 Asr.IsTrue (_emptyInstance.IsCompleted);
                 return _emptyInstance;
 #pragma warning disable 1998

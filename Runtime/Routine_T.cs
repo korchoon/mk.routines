@@ -4,7 +4,6 @@
 using System;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
-using Leopotam.EcsLite;
 using Mk.Debugs;
 using UnityEngine;
 
@@ -23,29 +22,19 @@ namespace Mk.Routines {
         Action _continuation;
         internal T _cached;
         internal bool _hasValue;
-#if MK_TRACE
-        EcsPackedEntityWithWorld _entity;
-#endif
-        internal Routine () {
-#if MK_TRACE
-            var newEntity = EditorLocator.World.NewEntity ();
-            _entity = EditorLocator.World.PackEntityWithWorld (newEntity);
-            EditorLocator.World.GetPool<__RoutineInfo> ().Add (newEntity).Value = this;
-#endif
-        }
+        internal Routine () { }
 
-
-        public void Break () {
+        public void Dispose () {
             if (IsCompleted) return;
 
             _Start = null;
             IsCompleted = true;
             if (AttachedRoutines.TryGet (out var attachedRoutines)) {
                 AttachedRoutines = default;
-                for (var i = attachedRoutines.Routines.Count - 1; i >= 0; i--) attachedRoutines.Routines[i].Break ();
+                for (var i = attachedRoutines.Routines.Count - 1; i >= 0; i--) attachedRoutines.Routines[i].Dispose ();
             }
 
-            if (Utils.TrySetNull (ref CurrentAwaiter, out var buf)) buf.Break ();
+            if (Utils.TrySetNull (ref CurrentAwaiter, out var buf)) buf.Dispose ();
             _rollback?.Dispose ();
 #if MK_TRACE
             __Await = $"[Interrupted at] {__Await}";
@@ -60,7 +49,7 @@ namespace Mk.Routines {
             if (Utils.TrySetNull (ref _continuation, out var c)) c.Invoke ();
         }
 
-        public void Update () {
+        public void Tick () {
             if (IsCompleted) return;
 
             if (Utils.TrySetNull (ref _Start, out var s)) {
@@ -70,9 +59,9 @@ namespace Mk.Routines {
 
             if (AttachedRoutines.TryGet (out var attachedRoutines))
                 for (var i = 0; i < attachedRoutines.Routines.Count; i++)
-                    attachedRoutines.Routines[i].Update ();
+                    attachedRoutines.Routines[i].Tick ();
 
-            CurrentAwaiter?.Update ();
+            CurrentAwaiter?.Tick ();
         }
 
         public Option<T> TryGetResult () => _hasValue ? _cached : default;

@@ -3,11 +3,12 @@
 // Copyright (c) 2016-2019 Mikhail Korchun <korchoon@gmail.com>
 // ----------------------------------------------------------------------------
 
+using System;
+
 namespace Mk.Routines {
-    public interface IRoutine {
+    public interface IRoutine : IDisposable{
         bool IsCompleted { get; }
-        void Update ();
-        void Break ();
+        void Tick ();
         void UpdateParent ();
     }
 

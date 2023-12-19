@@ -9,8 +9,8 @@ namespace Mk.Routines {
         ForeverAwaiter() { }
 
         public void UpdateParent() { }
-        public void Update() { }
-        public void Break() { }
+        public void Tick() { }
+        public void Dispose() { }
 
         #region async
 
